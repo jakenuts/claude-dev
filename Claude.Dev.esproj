@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.1408037">
+  <PropertyGroup>
+    <BuildCommand>npm run compile</BuildCommand>
+    <BuildOutputFolder>dist</BuildOutputFolder>
+    <CleanCommand>npx rimraf dist</CleanCommand>
+  </PropertyGroup>
+</Project>

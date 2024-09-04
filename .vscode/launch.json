@@ -10,6 +10,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
+				"--disable-extension saoudrizwan.claude-dev",
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
 			"outFiles": [
