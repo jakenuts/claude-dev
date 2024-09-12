@@ -10,8 +10,9 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--disable-extension saoudrizwan.claude-dev",
+				"--disable-extensions",
 				"--extensionDevelopmentPath=${workspaceFolder}"
+				//"--disable-extension saoudrizwan.claude-dev",				
 			],
 			"outFiles": [
 				"${workspaceFolder}/dist/**/*.js"
