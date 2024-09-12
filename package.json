@@ -1,8 +1,8 @@
 {
-  "name": "claude-dev",
-  "displayName": "Claude Dev",
+  "name": "claude-dev-unleashed",
+  "displayName": "Claude Dev Unleashed",
   "description": "Autonomous coding agent right in your IDE, capable of creating/editing files, executing commands, and more with your permission every step of the way.",
-  "version": "1.6.5",
+  "version": "1.6.5-unleashed",
   "icon": "icons/icon.png",
   "galleryBanner": {
     "color": "#232323",
@@ -15,10 +15,10 @@
     "name": "Saoud Rizwan"
   },
   "license": "MIT",
-  "publisher": "saoudrizwan",
+  "publisher": "jakenuts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/saoudrizwan/claude-dev"
+    "url": "https://github.com/jakenuts/claude-dev"
   },
   "categories": [
     "AI",
@@ -45,7 +45,7 @@
       "activitybar": [
         {
           "id": "claude-dev-ActivityBar",
-          "title": "Claude Dev",
+          "title": "Claude Dev Unleashed",
           "icon": "$(robot)"
         }
       ]
@@ -83,7 +83,7 @@
       {
         "command": "claude-dev.openInNewTab",
         "title": "Open In New Tab",
-        "category": "Claude Dev"
+        "category": "Claude Dev Unleashed"
       }
     ],
     "menus": {
@@ -128,7 +128,9 @@
     "start:webview": "cd webview-ui && npm run start",
     "build:webview": "cd webview-ui && npm run build",
     "test:webview": "cd webview-ui && npm run test",
-    "publish:marketplace": "vsce publish && ovsx publish"
+    "publish:marketplace": "vsce publish && ovsx publish",
+    "vscode:build-and-install": "npm run package && vsce package && npm run vscode:install-latest-package",  
+    "vscode:install-latest-package":"pwsh.exe -Command \"code-insiders --install-extension (Get-ChildItem *.vsix | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName\""
   },
   "devDependencies": {
     "@types/diff": "^5.2.1",
@@ -142,7 +144,8 @@
     "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
     "npm-run-all": "^4.1.5",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "@vscode/vsce": "^3.1.0"
   },
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.10.2",

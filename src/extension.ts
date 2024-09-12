@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	//console.log('Congratulations, your extension "claude-dev" is now active!')
 
-	outputChannel = vscode.window.createOutputChannel("Claude Dev")
+	outputChannel = vscode.window.createOutputChannel("Claude Dev Unleashed")
 	context.subscriptions.push(outputChannel)
 
 	outputChannel.appendLine("Claude Dev extension activated")
@@ -69,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		const targetCol = hasVisibleEditors ? Math.max(lastCol + 1, 1) : vscode.ViewColumn.Two
 
-		const panel = vscode.window.createWebviewPanel(ClaudeDevProvider.tabPanelId, "Claude Dev", targetCol, {
+		const panel = vscode.window.createWebviewPanel(ClaudeDevProvider.tabPanelId, "Claude Dev Unleashed", targetCol, {
 			enableScripts: true,
 			retainContextWhenHidden: true,
 			localResourceRoots: [context.extensionUri],
