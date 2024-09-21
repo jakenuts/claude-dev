@@ -11,7 +11,7 @@ import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 import { ApiHandler, buildApiHandler } from "./api"
 import { TerminalManager } from "./integrations/TerminalManager"
-import { LIST_FILES_LIMIT, listFiles, parseSourceCodeForDefinitionsTopLevel } from "./parse-source-code"
+import { listFiles, parseSourceCodeForDefinitionsTopLevel } from "./parse-source-code"
 import { ClaudeDevProvider } from "./providers/ClaudeDevProvider"
 import { ApiConfiguration } from "./shared/api"
 import { ClaudeRequestResult } from "./shared/ClaudeRequestResult"
@@ -26,10 +26,13 @@ import { findLast, findLastIndex, formatContentBlockToMarkdown } from "./utils"
 import { truncateHalfConversation } from "./utils/context-management"
 import { extractTextFromFile } from "./utils/extract-text"
 import { regexSearchFiles } from "./utils/ripgrep"
-import DiagnosticsMonitor from "./integrations/DiagnosticsMonitor"
+import { parseMentions } from "./utils/context-mentions"
+import { UrlContentFetcher } from "./utils/UrlContentFetcher"
+import { diagnosticsToProblemsString, getNewDiagnostics } from "./utils/diagnostics"
 
-const SYSTEM_PROMPT =
-	async () => `You are Claude Dev, a highly skilled software developer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+const SYSTEM_PROMPT = async (
+	supportsImages: boolean
+) => `You are Claude Dev, a highly skilled software developer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
  
@@ -37,12 +40,18 @@ CAPABILITIES
 
 - You can read and analyze code in various programming languages, and can write clean, efficient, and well-documented code.
 - You can debug complex issues and providing detailed explanations, offering architectural insights and design patterns.
-- You have access to tools that let you execute CLI commands on the user's computer, list files in a directory (top level or recursively), extract source code definitions, read and write files, and ask follow-up questions. These tools help you effectively accomplish a wide range of tasks, such as writing code, making edits or improvements to existing files, understanding the current state of a project, performing system operations, and much more.
+- You have access to tools that let you execute CLI commands on the user's computer, list files, view source code definitions, regex search${
+	supportsImages ? ", inspect websites" : ""
+}, read and write files, and ask follow-up questions. These tools help you effectively accomplish a wide range of tasks, such as writing code, making edits or improvements to existing files, understanding the current state of a project, performing system operations, and much more.
 - When the user initially gives you a task, a recursive list of all filepaths in the current working directory ('${cwd}') will be included in environment_details. This provides an overview of the project's file structure, offering key insights into the project from directory/file names (how developers conceptualize and organize their code) and file extensions (the language used). This can also guide decision-making on which files to explore further. If you need to further explore directories such as outside the current working directory, you can use the list_files tool. If you pass 'true' for the recursive parameter, it will list files recursively. Otherwise, it will list files at the top level, which is better suited for generic directories where you don't necessarily need the nested structure, like the Desktop.
 - You can use search_files to perform regex searches across files in a specified directory, outputting context-rich results that include surrounding lines. This is particularly useful for understanding code patterns, finding specific implementations, or identifying areas that need refactoring.
 - You can use the list_code_definition_names tool to get an overview of source code definitions for all files at the top level of a specified directory. This can be particularly useful when you need to understand the broader context and relationships between certain parts of the code. You may need to call this tool multiple times to understand various parts of the codebase related to the task.
 	- For example, when asked to make edits or improvements you might analyze the file structure in the initial environment_details to get an overview of the project, then use list_code_definition_names to get further insight using source code definitions for files located in relevant directories, then read_file to examine the contents of relevant files, analyze the code and suggest improvements or make necessary edits, then use the write_to_file tool to implement changes. If you refactored code that could affect other parts of the codebase, you could use search_files to ensure you update other files as needed.
-- The execute_command tool lets you run commands on the user's computer and should be used whenever you feel it can help accomplish the user's task. When you need to execute a CLI command, you must provide a clear explanation of what the command does. Prefer to execute complex CLI commands over creating executable scripts, since they are more flexible and easier to run. Interactive and long-running commands are allowed, since the commands are run in the user's VSCode terminal. The user may keep commands running in the background and you will be kept updated on their status along the way. Each command you execute is run in a new terminal instance.
+- You can use the execute_command tool to run commands on the user's computer whenever you feel it can help accomplish the user's task. When you need to execute a CLI command, you must provide a clear explanation of what the command does. Prefer to execute complex CLI commands over creating executable scripts, since they are more flexible and easier to run. Interactive and long-running commands are allowed, since the commands are run in the user's VSCode terminal. The user may keep commands running in the background and you will be kept updated on their status along the way. Each command you execute is run in a new terminal instance.${
+	supportsImages
+		? "\n- You can use the inspect_site tool to capture a screenshot and console logs of the initial state of a website (including html files and locally running development servers) when you feel it can help in better accomplishing the user's task. Consider using this tool judiciously at key stages of web development tasks—such as after implementing new features, making substantial changes, when troubleshooting issues, or to verify the result of your work. You can analyze the provided screenshot to ensure correct rendering or identify errors, and review console logs for runtime issues.\n	- For example, if asked to add a component to a react website, you might create the necessary files, use execute_command to run the site locally, then use inspect_site to verify there are no runtime errors on page load."
+		: ""
+}
 
 ====
 
@@ -65,8 +74,6 @@ RULES
 - Feel free to use markdown as much as you'd like in your responses. When using code blocks, always include a language specifier.
 - When presented with images, utilize your vision capabilities to thoroughly examine them and extract meaningful information. Incorporate these insights into your thought process as you accomplish the user's task.
 - At the end of each user message, you will automatically receive environment_details. This information is not written by the user themselves, but is auto-generated to provide potentially relevant context about the project structure and environment. While this information can be valuable for understanding the project context, do not treat it as a direct part of the user's request or response. Use it to inform your actions and decisions, but don't assume the user is explicitly asking about or referring to this information unless they clearly do so in their message. When using environment_details, explain your actions clearly to ensure the user understands, as they may not be aware of these details.
-- You will automatically receive workspace error diagnostics in environment_details. Be mindful that this may include issues beyond the scope of your task or the user's request. Focus on addressing errors and warnings relevant to your work, and avoid fixing pre-existing or unrelated issues unless the user specifically instructs you to do so.
-- If you are unable to resolve errors provided in environment_details after a few attempts, consider using ask_followup_question to ask the user for additional information, such as the latest documentation related to a problematic framework, to help you make progress on the task.
 - CRITICAL: When editing files with write_to_file, ALWAYS provide the COMPLETE file content in your response. This is NON-NEGOTIABLE. Partial updates or placeholders like '// rest of code unchanged' are STRICTLY FORBIDDEN. You MUST include ALL parts of the file, even if they haven't been modified. Failure to do so will result in incomplete or broken code, severely impacting the user's project.
 
 ====
@@ -76,7 +83,7 @@ OBJECTIVE
 You accomplish a given task iteratively, breaking it down into clear steps and working through them methodically.
 
 1. Analyze the user's task and set clear, achievable goals to accomplish it. Prioritize these goals in a logical order.
-2. Work through these goals sequentially, utilizing available tools as necessary. Each goal should correspond to a distinct step in your problem-solving process. It is okay for certain steps to take multiple iterations, i.e. if you need to create many files but are limited by your max output limitations, it's okay to create a few files at a time as each subsequent iteration will keep you informed on the work completed and what's remaining. 
+2. Work through these goals sequentially, utilizing available tools as necessary. Each goal should correspond to a distinct step in your problem-solving process. It is okay for certain steps to take multiple iterations, i.e. if you need to create many files, it's okay to create a few files at a time as each subsequent iteration will keep you informed on the work completed and what's remaining. 
 3. Remember, you have extensive capabilities with access to a wide range of tools that can be used in powerful and clever ways as necessary to accomplish each goal. Before calling a tool, do some analysis within <thinking></thinking> tags. First, analyze the file structure provided in environment_details to gain context and insights for proceeding effectively. Then, think about which of the provided tools is the most relevant tool to accomplish the user's task. Next, go through each of the required parameters of the relevant tool and determine if the user has directly provided or given enough information to infer a value. When deciding if the parameter can be inferred, carefully consider all the context to see if it supports a specific value. If all of the required parameters are present or can be reasonably inferred, close the thinking tag and proceed with the tool call. BUT, if one of the values for a required parameter is missing, DO NOT invoke the function (not even with fillers for the missing params) and instead, ask the user to provide the missing parameters using the ask_followup_question tool. DO NOT ask for more information on optional parameters if it is not provided.
 4. Once you've completed the user's task, you must use the attempt_completion tool to present the result of the task to the user. You may also provide a CLI command to showcase the result of your task; this can be particularly useful for web development tasks, where you can run e.g. \`open index.html\` to show the website you've built.
 5. The user may provide feedback, which you can use to make improvements and try again. But DO NOT continue in pointless back and forth conversations, i.e. don't end your responses with questions or offers for further assistance.
@@ -94,7 +101,7 @@ Current Working Directory: ${cwd}
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
 
-const tools: Tool[] = [
+const tools = (supportsImages: boolean): Tool[] => [
 	{
 		name: "execute_command",
 		description: `Execute a CLI command on the system. Use this when you need to perform system operations or run specific commands to accomplish any step in the user's task. You must tailor your command to the user's system and provide a clear explanation of what the command does. Prefer to execute complex CLI commands over creating executable scripts, as they are more flexible and easier to run. Commands will be executed in the current working directory: ${cwd}`,
@@ -204,6 +211,26 @@ const tools: Tool[] = [
 			required: ["path"],
 		},
 	},
+	...(supportsImages
+		? [
+				{
+					name: "inspect_site",
+					description:
+						"Captures a screenshot and console logs of the initial state of a website. This tool navigates to the specified URL, takes a screenshot of the entire page as it appears immediately after loading, and collects any console logs or errors that occur during page load. It does not interact with the page or capture any state changes after the initial load.",
+					input_schema: {
+						type: "object",
+						properties: {
+							url: {
+								type: "string",
+								description:
+									"The URL of the site to inspect. This should be a valid URL including the protocol (e.g. http://localhost:3000/page, file:///path/to/file.html, etc.)",
+							},
+						},
+						required: ["url"],
+					},
+				} satisfies Tool,
+		  ]
+		: []),
 	{
 		name: "ask_followup_question",
 		description:
@@ -252,7 +279,7 @@ export class ClaudeDev {
 	readonly taskId: string
 	private api: ApiHandler
 	private terminalManager: TerminalManager
-	private diagnosticsMonitor: DiagnosticsMonitor
+	private urlContentFetcher: UrlContentFetcher
 	private didEditFile: boolean = false
 	private customInstructions?: string
 	private alwaysAllowReadOnly: boolean
@@ -278,7 +305,7 @@ export class ClaudeDev {
 		this.providerRef = new WeakRef(provider)
 		this.api = buildApiHandler(apiConfiguration)
 		this.terminalManager = new TerminalManager()
-		this.diagnosticsMonitor = new DiagnosticsMonitor()
+		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.customInstructions = customInstructions
 		this.alwaysAllowReadOnly = alwaysAllowReadOnly ?? false
 
@@ -679,7 +706,7 @@ export class ClaudeDev {
 	abortTask() {
 		this.abort = true // will stop any autonomously running promises
 		this.terminalManager.disposeAll()
-		this.diagnosticsMonitor.dispose()
+		this.urlContentFetcher.closeBrowser()
 	}
 
 	async executeTool(toolName: ToolName, toolInput: any): Promise<[boolean, ToolResponse]> {
@@ -696,6 +723,8 @@ export class ClaudeDev {
 				return this.searchFiles(toolInput.path, toolInput.regex, toolInput.filePattern)
 			case "execute_command":
 				return this.executeCommand(toolInput.command)
+			case "inspect_site":
+				return this.inspectSite(toolInput.url)
 			case "ask_followup_question":
 				return this.askFollowupQuestion(toolInput.question)
 			case "attempt_completion":
@@ -763,6 +792,9 @@ export class ClaudeDev {
 				}
 			}
 
+			// get diagnostics before editing the file, we'll compare to diagnostics after editing to see if claude needs to fix anything
+			const preDiagnostics = vscode.languages.getDiagnostics()
+
 			let originalContent: string
 			if (fileExists) {
 				originalContent = await fs.readFile(absolutePath, "utf-8")
@@ -781,7 +813,7 @@ export class ClaudeDev {
 
 			// Keep track of newly created directories
 			const createdDirs: string[] = await this.createDirectoriesForFile(absolutePath)
-			console.log(`Created directories: ${createdDirs.join(", ")}`)
+			// console.log(`Created directories: ${createdDirs.join(", ")}`)
 			// make sure the file exists before we open it
 			if (!fileExists) {
 				await fs.writeFile(absolutePath, "")
@@ -832,11 +864,11 @@ export class ClaudeDev {
 				.filter((tab) => tab.input instanceof vscode.TabInputText && tab.input.uri.fsPath === absolutePath)
 			for (const tab of tabs) {
 				await vscode.window.tabGroups.close(tab)
-				console.log(`Closed tab for ${absolutePath}`)
+				// console.log(`Closed tab for ${absolutePath}`)
 				documentWasOpen = true
 			}
 
-			console.log(`Document was open: ${documentWasOpen}`)
+			// console.log(`Document was open: ${documentWasOpen}`)
 
 			// edit needs to happen after we close the original tab
 			const edit = new vscode.WorkspaceEdit()
@@ -1038,6 +1070,27 @@ export class ClaudeDev {
 
 			await this.closeDiffViews()
 
+			/*
+			Getting diagnostics before and after the file edit is a better approach than
+			automatically tracking problems in real-time. This method ensures we only
+			report new problems that are a direct result of this specific edit.
+			Since these are new problems resulting from Claude's edit, we know they're
+			directly related to the work he's doing. This eliminates the risk of Claude
+			going off-task or getting distracted by unrelated issues, which was a problem
+			with the previous auto-debug approach. Some users' machines may be slow to
+			update diagnostics, so this approach provides a good balance between automation
+			and avoiding potential issues where Claude might get stuck in loops due to
+			outdated problem information. If no new problems show up by the time the user
+			accepts the changes, they can always debug later using the '@problems' mention.
+			This way, Claude only becomes aware of new problems resulting from his edits
+			and can address them accordingly. If problems don't change immediately after
+			applying a fix, Claude won't be notified, which is generally fine since the
+			initial fix is usually correct and it may just take time for linters to catch up.
+			*/
+			const postDiagnostics = vscode.languages.getDiagnostics()
+			const newProblems = diagnosticsToProblemsString(getNewDiagnostics(preDiagnostics, postDiagnostics), cwd) // will be empty string if no errors/warnings
+			const newProblemsMessage =
+				newProblems.length > 0 ? `\n\nNew problems detected after saving the file:\n${newProblems}` : ""
 			// await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
 
 			// If the edited content has different EOL characters, we don't want to show a diff with all the EOL differences.
@@ -1057,11 +1110,16 @@ export class ClaudeDev {
 				return [
 					false,
 					await this.formatToolResult(
-						`The user made the following updates to your content:\n\n${userDiff}\n\nThe updated content, which includes both your original modifications and the user's additional edits, has been successfully saved to ${relPath}. Note this does not mean you need to re-write the file with the user's changes, they have already been applied to the file.`
+						`The user made the following updates to your content:\n\n${userDiff}\n\nThe updated content, which includes both your original modifications and the user's additional edits, has been successfully saved to ${relPath}. (Note this does not mean you need to re-write the file with the user's changes, as they have already been applied to the file.)${newProblemsMessage}`
 					),
 				]
 			} else {
-				return [false, await this.formatToolResult(`The content was successfully saved to ${relPath}.`)]
+				return [
+					false,
+					await this.formatToolResult(
+						`The content was successfully saved to ${relPath}.${newProblemsMessage}`
+					),
+				]
 			}
 		} catch (error) {
 			const errorString = `Error writing file: ${JSON.stringify(serializeError(error))}`
@@ -1193,8 +1251,8 @@ export class ClaudeDev {
 		try {
 			const recursive = recursiveRaw?.toLowerCase() === "true"
 			const absolutePath = path.resolve(cwd, relDirPath)
-			const files = await listFiles(absolutePath, recursive)
-			const result = this.formatFilesList(absolutePath, files)
+			const [files, didHitLimit] = await listFiles(absolutePath, recursive, 200)
+			const result = this.formatFilesList(absolutePath, files, didHitLimit)
 
 			const message = JSON.stringify({
 				tool: recursive ? "listFilesRecursive" : "listFilesTopLevel",
@@ -1251,7 +1309,7 @@ export class ClaudeDev {
 		}
 	}
 
-	formatFilesList(absolutePath: string, files: string[]): string {
+	formatFilesList(absolutePath: string, files: string[], didHitLimit: boolean): string {
 		const sorted = files
 			.map((file) => {
 				// convert absolute path to relative path
@@ -1279,11 +1337,12 @@ export class ClaudeDev {
 				// the shorter one comes first
 				return aParts.length - bParts.length
 			})
-		if (sorted.length >= LIST_FILES_LIMIT) {
-			const truncatedList = sorted.slice(0, LIST_FILES_LIMIT).join("\n")
-			return `${truncatedList}\n\n(Truncated at ${LIST_FILES_LIMIT} results. Try listing files in subdirectories if you need to explore further.)`
+		if (didHitLimit) {
+			return `${sorted.join(
+				"\n"
+			)}\n\n(File list truncated. Use list_files on specific subdirectories if you need to explore further.)`
 		} else if (sorted.length === 0 || (sorted.length === 1 && sorted[0] === "")) {
-			return "No files found or you do not have permission to view this directory."
+			return "No files found."
 		} else {
 			return sorted.join("\n")
 		}
@@ -1377,6 +1436,59 @@ export class ClaudeDev {
 			await this.say(
 				"error",
 				`Error searching files:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`
+			)
+			return [false, await this.formatToolError(errorString)]
+		}
+	}
+
+	async inspectSite(url?: string): Promise<[boolean, ToolResponse]> {
+		if (url === undefined) {
+			this.consecutiveMistakeCount++
+			return [false, await this.sayAndCreateMissingParamError("inspect_site", "url")]
+		}
+		this.consecutiveMistakeCount = 0
+		try {
+			const message = JSON.stringify({
+				tool: "inspectSite",
+				path: url,
+			} satisfies ClaudeSayTool)
+
+			if (this.alwaysAllowReadOnly) {
+				await this.say("tool", message)
+			} else {
+				const { response, text, images } = await this.ask("tool", message)
+				if (response !== "yesButtonTapped") {
+					if (response === "messageResponse") {
+						await this.say("user_feedback", text, images)
+						return [
+							true,
+							this.formatToolResponseWithImages(await this.formatToolDeniedFeedback(text), images),
+						]
+					}
+					return [true, await this.formatToolDenied()]
+				}
+			}
+
+			await this.say("inspect_site_result", "") // no result, starts the loading spinner waiting for result
+			await this.urlContentFetcher.launchBrowser()
+			const { screenshot, logs } = await this.urlContentFetcher.urlToScreenshotAndLogs(url)
+			await this.urlContentFetcher.closeBrowser()
+			await this.say("inspect_site_result", logs, [screenshot])
+
+			return [
+				false,
+				this.formatToolResponseWithImages(
+					`The site has been visited, with console logs captured and a screenshot taken for your analysis.\n\nConsole logs:\n${
+						logs || "(No logs)"
+					}`,
+					[screenshot]
+				),
+			]
+		} catch (error) {
+			const errorString = `Error inspecting site: ${JSON.stringify(serializeError(error))}`
+			await this.say(
+				"error",
+				`Error inspecting site:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`
 			)
 			return [false, await this.formatToolError(errorString)]
 		}
@@ -1537,7 +1649,7 @@ export class ClaudeDev {
 
 	async attemptApiRequest(): Promise<Anthropic.Messages.Message> {
 		try {
-			let systemPrompt = await SYSTEM_PROMPT()
+			let systemPrompt = await SYSTEM_PROMPT(this.api.getModel().info.supportsImages)
 			if (this.customInstructions && this.customInstructions.trim()) {
 				// altering the system prompt mid-task will break the prompt cache, but in the grand scheme this will not change often so it's better to not pollute user messages with it the way we have to with <potentially relevant details>
 				systemPrompt += `
@@ -1573,7 +1685,7 @@ ${this.customInstructions.trim()}
 			const { message, userCredits } = await this.api.createMessage(
 				systemPrompt,
 				this.apiConversationHistory,
-				tools
+				tools(this.api.getModel().info.supportsImages)
 			)
 			if (userCredits !== undefined) {
 				console.log("Updating credits", userCredits)
@@ -1631,12 +1743,56 @@ ${this.customInstructions.trim()}
 				request:
 					userContent
 						.map((block) => formatContentBlockToMarkdown(block, this.apiConversationHistory))
-						.join("\n\n") + "\n\n<environment_details>\nLoading...\n</environment_details>",
+						.join("\n\n") + "\n\nLoading...",
 			})
 		)
 
-		// potentially expensive operation
-		const environmentDetails = await this.getEnvironmentDetails(includeFileDetails)
+		// potentially expensive operations
+		const [parsedUserContent, environmentDetails] = await Promise.all([
+			// Process userContent array, which contains various block types:
+			// TextBlockParam, ImageBlockParam, ToolUseBlockParam, and ToolResultBlockParam.
+			// We need to apply parseMentions() to:
+			// 1. All TextBlockParam's text (first user message with task)
+			// 2. ToolResultBlockParam's content/context text arrays if it contains "<feedback>" (see formatToolDeniedFeedback, attemptCompletion, executeCommand, and consecutiveMistakeCount >= 3) or "<answer>" (see askFollowupQuestion), we place all user generated content in these tags so they can effectively be used as markers for when we should parse mentions)
+			Promise.all(
+				userContent.map(async (block) => {
+					if (block.type === "text") {
+						return {
+							...block,
+							text: await parseMentions(block.text, cwd, this.urlContentFetcher),
+						}
+					} else if (block.type === "tool_result") {
+						const isUserMessage = (text: string) => text.includes("<feedback>") || text.includes("<answer>")
+						if (typeof block.content === "string" && isUserMessage(block.content)) {
+							return {
+								...block,
+								content: await parseMentions(block.content, cwd, this.urlContentFetcher),
+							}
+						} else if (Array.isArray(block.content)) {
+							const parsedContent = await Promise.all(
+								block.content.map(async (contentBlock) => {
+									if (contentBlock.type === "text" && isUserMessage(contentBlock.text)) {
+										return {
+											...contentBlock,
+											text: await parseMentions(contentBlock.text, cwd, this.urlContentFetcher),
+										}
+									}
+									return contentBlock
+								})
+							)
+							return {
+								...block,
+								content: parsedContent,
+							}
+						}
+					}
+					return block
+				})
+			),
+			this.getEnvironmentDetails(includeFileDetails),
+		])
+
+		userContent = parsedUserContent
 
 		// add environment details as its own text block, separate from tool results
 		userContent.push({ type: "text", text: environmentDetails })
@@ -1858,24 +2014,25 @@ ${this.customInstructions.trim()}
 
 		const busyTerminals = this.terminalManager.getTerminals(true)
 		const inactiveTerminals = this.terminalManager.getTerminals(false)
-		const allTerminals = [...busyTerminals, ...inactiveTerminals]
+		// const allTerminals = [...busyTerminals, ...inactiveTerminals]
 
-		if (busyTerminals.length > 0 || this.didEditFile) {
-			await delay(300) // delay after saving file to let terminals/diagnostics catch up
+		if (busyTerminals.length > 0 && this.didEditFile) {
+			//  || this.didEditFile
+			await delay(300) // delay after saving file to let terminals catch up
 		}
 
-		let terminalWasBusy = false
-		if (allTerminals.length > 0) {
+		// let terminalWasBusy = false
+		if (busyTerminals.length > 0) {
 			// wait for terminals to cool down
-			// note this does not mean they're actively running just that they recently output something
-			terminalWasBusy = allTerminals.some((t) => this.terminalManager.isProcessHot(t.id))
-			await pWaitFor(() => allTerminals.every((t) => !this.terminalManager.isProcessHot(t.id)), {
+			// terminalWasBusy = allTerminals.some((t) => this.terminalManager.isProcessHot(t.id))
+			await pWaitFor(() => busyTerminals.every((t) => !this.terminalManager.isProcessHot(t.id)), {
 				interval: 100,
 				timeout: 15_000,
 			}).catch(() => {})
 		}
 
 		// we want to get diagnostics AFTER terminal cools down for a few reasons: terminal could be scaffolding a project, dev servers (compilers like webpack) will first re-compile and then send diagnostics, etc
+		/*
 		let diagnosticsDetails = ""
 		const diagnostics = await this.diagnosticsMonitor.getCurrentDiagnostics(this.didEditFile || terminalWasBusy) // if claude ran a command (ie npm install) or edited the workspace then wait a bit for updated diagnostics
 		for (const [uri, fileDiagnostics] of diagnostics) {
@@ -1890,7 +2047,8 @@ ${this.customInstructions.trim()}
 				}
 			}
 		}
-		this.didEditFile = false // reset, this lets us know when to wait for saved files to update diagnostics
+		*/
+		this.didEditFile = false // reset, this lets us know when to wait for saved files to update terminals
 
 		// waiting for updated diagnostics lets terminal output be the most up-to-date possible
 		let terminalDetails = ""
@@ -1928,26 +2086,28 @@ ${this.customInstructions.trim()}
 			}
 		}
 
-		details += "\n\n# VSCode Workspace Errors"
-		if (diagnosticsDetails) {
-			details += diagnosticsDetails
-		} else {
-			details += "\n(No errors detected)"
-		}
+		// details += "\n\n# VSCode Workspace Errors"
+		// if (diagnosticsDetails) {
+		// 	details += diagnosticsDetails
+		// } else {
+		// 	details += "\n(No errors detected)"
+		// }
 
 		if (terminalDetails) {
 			details += terminalDetails
 		}
 
 		if (includeFileDetails) {
+			details += `\n\n# Current Working Directory (${cwd}) Files\n`
 			const isDesktop = cwd === path.join(os.homedir(), "Desktop")
-			const files = await listFiles(cwd, !isDesktop)
-			const result = this.formatFilesList(cwd, files)
-			details += `\n\n# Current Working Directory (${cwd}) Files\n${result}${
-				isDesktop
-					? "\n(Note: Only top-level contents shown for Desktop by default. Use list_files to explore further if necessary.)"
-					: ""
-			}`
+			if (isDesktop) {
+				// don't want to immediately access desktop since it would show permission popup
+				details += "(Desktop files not shown automatically. Use list_files to explore if needed.)"
+			} else {
+				const [files, didHitLimit] = await listFiles(cwd, true, 200)
+				const result = this.formatFilesList(cwd, files, didHitLimit)
+				details += result
+			}
 		}
 
 		return `<environment_details>\n${details.trim()}\n</environment_details>`
