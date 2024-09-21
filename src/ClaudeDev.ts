@@ -433,6 +433,18 @@ export class ClaudeDev {
 		}
 	}
 
+	
+private continueAutonomously(type:ClaudeAsk, question?: string)
+{   
+  if (type === "command") {
+	return true;
+  }
+  if (type === "tool" && question && (question.includes("newFileCreated") || question.includes("editedExistingFile"))) {
+	return true;
+  }
+  return false;
+}
+
 	async ask(
 		type: ClaudeAsk,
 		question?: string
@@ -446,21 +458,18 @@ export class ClaudeDev {
 		this.askResponseImages = undefined
 		const askTs = Date.now()
 		this.lastMessageTs = askTs
-		
-		if  ((type=== "command") ||
-			 (type === "tool" && question?.includes("newFileCreated") || question?.includes("editedExistingFile"))) 
-		{		
+		if (this.continueAutonomously(type, question)) {
 			console.log(`⛓️‍💥 Skipping confirmation of ${type} - ${question}`)
 			this.askResponse = "yesButtonTapped";
 		}
 		else
 		{
-			await this.addToClaudeMessages({ ts: askTs, type: "ask", ask: type, text: question })
-			await this.providerRef.deref()?.postStateToWebview()
-			await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
-			if (this.lastMessageTs !== askTs) {
-				throw new Error("Current ask promise was ignored") // could happen if we send multiple asks in a row i.e. with command_output. It's important that when we know an ask could fail, it is handled gracefully
-			}			
+		await this.addToClaudeMessages({ ts: askTs, type: "ask", ask: type, text: question })
+		await this.providerRef.deref()?.postStateToWebview()
+		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
+		if (this.lastMessageTs !== askTs) {
+			throw new Error("Current ask promise was ignored") // could happen if we send multiple asks in a row i.e. with command_output. It's important that when we know an ask could fail, it is handled gracefully
+		}
 		}
 		const result = { response: this.askResponse!, text: this.askResponseText, images: this.askResponseImages }
 		this.askResponse = undefined
