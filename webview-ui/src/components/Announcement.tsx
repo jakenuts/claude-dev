@@ -31,14 +31,47 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 			<h3 style={{ margin: "0 0 8px" }}>
 				🎉{"  "}New in v{version}
 			</h3>
-			<p style={{ margin: "5px 0px" }}>
-				Commands now run directly in your terminal thanks to VSCode 1.93's new shell integration updates! Plus a
-				new 'Proceed While Running' button to let Claude continue working while commands run, sending him new
-				output along the way (i.e. letting him react to server errors as he edits files).{" "}
-				<VSCodeLink style={{ display: "inline" }} href="https://x.com/sdrzn/status/1833316974518014072">
-					Demo here!
+			<p style={{ margin: "5px 0px" }}></p>
+			<ul style={{ margin: "0 0 8px", paddingLeft: "12px" }}>
+				<li>
+					Claude can now use a browser! This update adds a new <code>inspect_site</code> tool that captures
+					screenshots and console logs from websites (including localhost), making it easier for Claude to
+					troubleshoot issues on his own.
+					<VSCodeLink style={{ display: "inline" }} href="https://x.com/sdrzn/status/1837559914023342129">
+						See a demo here.
+					</VSCodeLink>
+				</li>
+				<li>
+					Improved automatic linter/compiler debugging by only sending Claude new errors that result from his
+					edits, rather than reporting all workspace problems.
+				</li>
+				<li>
+					You can now use '@' in the textarea to add context:
+					<ul style={{ margin: "0 0 8px", paddingLeft: "20px" }}>
+						<li>
+							<strong>@url:</strong> Paste in a URL for the extension to fetch and convert to markdown
+							(i.e. give Claude the latest docs)
+						</li>
+						<li>
+							<strong>@problems:</strong> Add workspace errors and warnings for Claude to fix
+						</li>
+						<li>
+							<strong>@file:</strong> Adds a file's contents so you don't have to waste API requests
+							approving read file (+ type to search files)
+						</li>
+						<li>
+							<strong>@folder:</strong> Adds folder's files all at once
+						</li>
+					</ul>
+				</li>
+			</ul>
+			{/* <p style={{ margin: "5px 0px" }}>
+				Claude can now monitor workspace problems to keep updated on linter/compiler/build issues, letting him
+				proactively fix errors on his own! (adding missing imports, fixing type errors, etc.)
+				<VSCodeLink style={{ display: "inline" }} href="https://x.com/sdrzn/status/1835100787275419829">
+					See a demo here.
 				</VSCodeLink>
-			</p>
+			</p> */}
 			{/*<ul style={{ margin: "0 0 8px", paddingLeft: "12px" }}>
 				 <li>
 					OpenRouter now supports prompt caching! They also have much higher rate limits than other providers,

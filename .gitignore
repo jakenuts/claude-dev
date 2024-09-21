@@ -7,3 +7,4 @@ node_modules
 /obj/Debug
 *.user
 /.idea
+pnpm-lock.yaml

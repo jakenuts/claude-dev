@@ -4,10 +4,11 @@ import React, { memo, useMemo } from "react"
 import ReactMarkdown from "react-markdown"
 import { ClaudeMessage, ClaudeSayTool } from "../../../src/shared/ExtensionMessage"
 import { COMMAND_OUTPUT_STRING } from "../../../src/shared/combineCommandSequences"
+import { vscode } from "../utils/vscode"
 import CodeAccordian, { removeLeadingNonAlphanumeric } from "./CodeAccordian"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
+import { highlightMentions } from "./TaskHeader"
 import Thumbnails from "./Thumbnails"
-import { vscode } from "../utils/vscode"
 
 interface ChatRowProps {
 	message: ClaudeMessage
@@ -208,7 +209,6 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 								style={{
 									color: "var(--vscode-descriptionForeground)",
 									display: "flex",
-									justifyContent: "space-between",
 									alignItems: "center",
 									padding: "9px 10px",
 									cursor: "pointer",
@@ -220,6 +220,7 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 								onClick={() => {
 									vscode.postMessage({ type: "openFile", text: tool.content })
 								}}>
+								{tool.path?.startsWith(".") && <span>.</span>}
 								<span
 									style={{
 										whiteSpace: "nowrap",
@@ -231,6 +232,7 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 									}}>
 									{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
 								</span>
+								<div style={{ flexGrow: 1 }}></div>
 								<span
 									className={`codicon codicon-link-external`}
 									style={{ fontSize: 13.5, margin: "1px 0" }}></span>
@@ -323,6 +325,31 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 						/>
 					</>
 				)
+			case "inspectSite":
+				const isInspecting = lastModifiedMessage?.say === "inspect_site_result" && !lastModifiedMessage?.images
+				return (
+					<>
+						<div style={headerStyle}>
+							{isInspecting ? <ProgressIndicator /> : toolIcon("inspect")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask" ? (
+									<>Claude wants to inspect this website:</>
+								) : (
+									<>Claude is inspecting this website:</>
+								)}
+							</span>
+						</div>
+						<div
+							style={{
+								borderRadius: 3,
+								border: "1px solid var(--vscode-editorGroup-border)",
+								overflow: "hidden",
+								backgroundColor: CODE_BLOCK_BG_COLOR,
+							}}>
+							<CodeBlock source={`${"```"}shell\n${tool.path}\n${"```"}`} forceWrap={true} />
+						</div>
+					</>
+				)
 			default:
 				return null
 		}
@@ -357,7 +384,21 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 								<>
 									<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>
 										{apiRequestFailedMessage}
+										{apiRequestFailedMessage?.toLowerCase().includes("powershell") && (
+											<>
+												<br />
+												<br />
+												It seems like you're having Windows PowerShell issues, please see this{" "}
+												<a
+													href="https://github.com/saoudrizwan/claude-dev/wiki/TroubleShooting-%E2%80%90-%22PowerShell-is-not-recognized-as-an-internal-or-external-command%22"
+													style={{ color: "inherit", textDecoration: "underline" }}>
+													troubleshooting guide
+												</a>
+												.
+											</>
+										)}
 									</p>
+
 									{/* {apiProvider === "kodu" && (
 											<div
 												style={{
@@ -424,7 +465,7 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 								whiteSpace: "pre-line",
 								wordWrap: "break-word",
 							}}>
-							<span style={{ display: "block" }}>{message.text}</span>
+							<span style={{ display: "block" }}>{highlightMentions(message.text)}</span>
 							{message.images && message.images.length > 0 && (
 								<Thumbnails images={message.images} style={{ marginTop: "8px" }} />
 							)}
@@ -446,6 +487,42 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 							/>
 						</div>
 					)
+				case "inspect_site_result":
+					const logs = message.text || ""
+					const screenshot = message.images?.[0]
+					return (
+						<div
+							style={{
+								marginTop: -10,
+								width: "100%",
+							}}>
+							{screenshot && (
+								<img
+									src={screenshot}
+									alt="Inspect screenshot"
+									style={{
+										width: "calc(100% - 2px)",
+										height: "auto",
+										objectFit: "contain",
+										marginBottom: logs ? 7 : 0,
+										borderRadius: 3,
+										cursor: "pointer",
+										marginLeft: "1px",
+									}}
+									onClick={() => vscode.postMessage({ type: "openImage", text: screenshot })}
+								/>
+							)}
+							{logs && (
+								<CodeAccordian
+									code={logs}
+									language="shell"
+									isConsoleLogs={true}
+									isExpanded={isExpanded}
+									onToggleExpand={onToggleExpand}
+								/>
+							)}
+						</div>
+					)
 				case "error":
 					return (
 						<>
@@ -465,7 +542,7 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 								{icon}
 								{title}
 							</div>
-							<div style={{ color: "var(--vscode-charts-green)" }}>
+							<div style={{ color: "var(--vscode-charts-green)", paddingTop: 10 }}>
 								<Markdown markdown={message.text} />
 							</div>
 						</>
@@ -518,7 +595,7 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 									{title}
 								</div>
 							)}
-							<div>
+							<div style={{ paddingTop: 10 }}>
 								<Markdown markdown={message.text} />
 							</div>
 						</>
@@ -618,7 +695,7 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 									{icon}
 									{title}
 								</div>
-								<div style={{ color: "var(--vscode-charts-green)" }}>
+								<div style={{ color: "var(--vscode-charts-green)", paddingTop: 10 }}>
 									<Markdown markdown={message.text} />
 								</div>
 							</div>
@@ -635,7 +712,7 @@ const ChatRowContent = ({ message, isExpanded, onToggleExpand, lastModifiedMessa
 									{title}
 								</div>
 							)}
-							<div>
+							<div style={{ paddingTop: 10 }}>
 								<Markdown markdown={message.text} />
 							</div>
 						</>
@@ -669,7 +746,7 @@ const Markdown = memo(({ markdown }: { markdown?: string }) => {
 		// return `_<thinking>_\n\n${content}\n\n_</thinking>_`
 	})
 	return (
-		<div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+		<div style={{ wordBreak: "break-word", overflowWrap: "anywhere", marginBottom: -10, marginTop: -10 }}>
 			<ReactMarkdown
 				children={parsed}
 				components={{
@@ -680,8 +757,8 @@ const Markdown = memo(({ markdown }: { markdown?: string }) => {
 								style={{
 									...style,
 									margin: 0,
-									marginTop: 0,
-									marginBottom: 0,
+									marginTop: 10,
+									marginBottom: 10,
 									whiteSpace: "pre-wrap",
 									wordBreak: "break-word",
 									overflowWrap: "anywhere",
@@ -715,6 +792,20 @@ const Markdown = memo(({ markdown }: { markdown?: string }) => {
 									margin: "10px 0",
 									wordBreak: "break-word",
 									overflowWrap: "anywhere",
+								}}
+								{...rest}
+							/>
+						)
+					},
+					// pre always surrounds a code, and we custom handle code blocks below. Pre has some non-10 margin, while all other elements in markdown have a 10 top/bottom margin and the outer div has a -10 top/bottom margin to counteract this between chat rows. However we render markdown in a completion_result row so make sure to add padding as necessary when used within other rows.
+					pre(props) {
+						const { style, ...rest } = props
+						return (
+							<pre
+								style={{
+									...style,
+									marginTop: 10,
+									marginBlock: 10,
 								}}
 								{...rest}
 							/>
