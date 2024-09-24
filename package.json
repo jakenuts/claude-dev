@@ -129,6 +129,7 @@
     "build:webview": "cd webview-ui && npm run build",
     "test:webview": "cd webview-ui && npm run test",
     "publish:marketplace": "vsce publish && ovsx publish",
+    "publish:github": "npm run package && vsce package && git add *.vsix && git commit -m 'Build VSIX package for release' && git push origin dev-unleashed",  
     "vscode:build-and-install": "npm run package && vsce package && npm run vscode:install-latest-package",  
     "vscode:install-latest-package":"pwsh.exe -Command \"code-insiders --install-extension (Get-ChildItem *.vsix | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName\""
   },

@@ -8,6 +8,14 @@
   <a href="https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev" target="_blank"><strong>Download VSCode Extension</strong></a> | <a href="https://discord.gg/claudedev" target="_blank"><strong>Join the Discord</strong></a>
 </p>
 
+<p align="center">
+  <strong>Latest Release:</strong> <a href="https://github.com/jakenuts/claude-dev/releases/latest" target="_blank">Download claude-dev-unleashed-1.9.4-unleashed.vsix</a>
+</p>
+
+<p align="center">
+  <strong>Note:</strong> This is the 'dev-unleashed' branch of Claude Dev.
+</p>
+
 Thanks to [Claude 3.5 Sonnet's agentic coding capabilities](https://www-cdn.anthropic.com/fed9cc193a14b84131812372d8d5857f8f304c52/Model_Card_Claude_3_Addendum.pdf) Claude Dev can handle complex software development tasks step-by-step. With tools that let him create & edit files, explore complex projects, and execute terminal commands (after you grant permission), he can assist you in ways that go beyond simple code completion or tech support. While autonomous AI scripts traditionally run in sandboxed environments, Claude Dev provides a human-in-the-loop GUI to supervise every file changed and command executed, providing a safe and accessible way to explore the potential of agentic AI.
 
 -   Paste images in chat to use Claude's vision capabilities and turn mockups into fully functional applications or fix bugs with screenshots
@@ -67,7 +75,7 @@ To build Claude Dev locally, follow these steps:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/saoudrizwan/claude-dev.git
+    git clone https://github.com/jakenuts/claude-dev.git -b dev-unleashed
     ```
 2. Open the project in VSCode:
     ```bash
@@ -101,7 +109,7 @@ This project is licensed under the MIT License. See the [LICENSE](./LICENSE) fil
 
 ## Questions?
 
-Contact me on X <a href="https://x.com/sdrzn" target="_blank">@sdrzn</a>. Please create an <a href="https://github.com/saoudrizwan/claude-dev/issues">issue</a> if you come across a bug, or use the <a href="https://github.com/saoudrizwan/claude-dev/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop">feature request board</a> to share & vote on new features.
+Contact me on X <a href="https://x.com/sdrzn" target="_blank">@sdrzn</a>. Please create an <a href="https://github.com/jakenuts/claude-dev/issues">issue</a> if you come across a bug, or use the <a href="https://github.com/jakenuts/claude-dev/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop">feature request board</a> to share & vote on new features.
 
 ## Acknowledgments
 
