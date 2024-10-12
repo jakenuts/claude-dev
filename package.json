@@ -2,7 +2,7 @@
   "name": "claude-dev-unleashed",
   "displayName": "Cline Unleashed (forked from Cline)",
   "description": "Autonomous coding agent right in your IDE, capable of creating/editing files, executing commands, and more with your permission every step of the way.",
-  "version": "2.0.3",
+  "version": "2.0.5-unleashed",
   "icon": "assets/icons/icon.png",
   "galleryBanner": {
     "color": "#556C80",
@@ -12,13 +12,13 @@
     "vscode": "^1.84.0"
   },
   "author": {
-    "name": "Cline Inc."
+    "name": "Cline Bot Inc."
   },
   "license": "Apache-2.0",
   "publisher": "jakenuts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/clinebot/cline"
+    "url": "https://github.com/jakenuts/claude-dev"
   },
   "homepage": "https://cline.bot",
   "categories": [
@@ -133,7 +133,8 @@
     "build:webview": "cd webview-ui && npm run build",
     "test:webview": "cd webview-ui && npm run test",
     "publish:marketplace": "vsce publish && ovsx publish",
-    "vscode:build-and-install": "npm run compile && npm run package && vsce publish"
+    "vscode:build-and-install": "npm run compile && npm run package && vsce publish",
+    "vscode:build-and-package": "npm run build:webview && npm run compile && npm run package && vsce package"
   },
   "devDependencies": {
     "@types/diff": "^5.2.1",
