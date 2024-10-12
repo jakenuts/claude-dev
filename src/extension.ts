@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.plusButtonClicked", async () => {
+		vscode.commands.registerCommand("clineunleashed.plusButtonClicked", async () => {
 			outputChannel.appendLine("Plus button Clicked")
 			await sidebarProvider.clearTask()
 			await sidebarProvider.postStateToWebview()
@@ -76,18 +76,18 @@ export function activate(context: vscode.ExtensionContext) {
 		await vscode.commands.executeCommand("workbench.action.lockEditorGroup")
 	}
 
-	context.subscriptions.push(vscode.commands.registerCommand("cline.popoutButtonClicked", openClineInNewTab))
-	context.subscriptions.push(vscode.commands.registerCommand("cline.openInNewTab", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("clineunleashed.popoutButtonClicked", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("clineunleashed.openInNewTab", openClineInNewTab))
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.settingsButtonClicked", () => {
+		vscode.commands.registerCommand("clineunleashed.settingsButtonClicked", () => {
 			//vscode.window.showInformationMessage(message)
 			sidebarProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		})
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.historyButtonClicked", () => {
+		vscode.commands.registerCommand("clineunleashed.historyButtonClicked", () => {
 			sidebarProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		})
 	)

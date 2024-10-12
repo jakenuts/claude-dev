@@ -1,8 +1,8 @@
 {
-  "name": "claude-dev",
-  "displayName": "Cline (prev. Claude Dev)",
+  "name": "claude-dev-unleashed",
+  "displayName": "Cline Unleashed (forked from Cline)",
   "description": "Autonomous coding agent right in your IDE, capable of creating/editing files, executing commands, and more with your permission every step of the way.",
-  "version": "2.0.3-unleashed",
+  "version": "2.0.3",
   "icon": "assets/icons/icon.png",
   "galleryBanner": {
     "color": "#556C80",
@@ -15,7 +15,7 @@
     "name": "Cline Inc."
   },
   "license": "Apache-2.0",
-  "publisher": "saoudrizwan",
+  "publisher": "jakenuts",
   "repository": {
     "type": "git",
     "url": "https://github.com/clinebot/cline"
@@ -48,44 +48,44 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "claude-dev-ActivityBar",
-          "title": "Cline",
+          "id": "claude-dev-unleashed-ActivityBar",
+          "title": "Cline Unleashed⛓️‍💥",
           "icon": "$(robot)"
         }
       ]
     },
     "views": {
-      "claude-dev-ActivityBar": [
+      "claude-dev-unleashed-ActivityBar": [
         {
           "type": "webview",
-          "id": "claude-dev.SidebarProvider",
+          "id": "claude-dev-unleashed.SidebarProvider",
           "name": ""
         }
       ]
     },
     "commands": [
       {
-        "command": "cline.plusButtonClicked",
+        "command": "clineunleashed.plusButtonClicked",
         "title": "New Task",
         "icon": "$(add)"
       },
       {
-        "command": "cline.historyButtonClicked",
+        "command": "clineunleashed.historyButtonClicked",
         "title": "History",
         "icon": "$(history)"
       },
       {
-        "command": "cline.popoutButtonClicked",
+        "command": "clineunleashed.popoutButtonClicked",
         "title": "Open in Editor",
         "icon": "$(link-external)"
       },
       {
-        "command": "cline.settingsButtonClicked",
+        "command": "clineunleashed.settingsButtonClicked",
         "title": "Settings",
         "icon": "$(settings-gear)"
       },
       {
-        "command": "cline.openInNewTab",
+        "command": "clineunleashed.openInNewTab",
         "title": "Open In New Tab",
         "category": "Cline"
       }
@@ -93,24 +93,24 @@
     "menus": {
       "view/title": [
         {
-          "command": "cline.plusButtonClicked",
+          "command": "clineunleashed.plusButtonClicked",
           "group": "navigation@1",
-          "when": "view == claude-dev.SidebarProvider"
+          "when": "view == claude-dev-unleashed.SidebarProvider"
         },
         {
-          "command": "cline.historyButtonClicked",
+          "command": "clineunleashed.historyButtonClicked",
           "group": "navigation@2",
-          "when": "view == claude-dev.SidebarProvider"
+          "when": "view == claude-dev-unleashed.SidebarProvider"
         },
         {
-          "command": "cline.popoutButtonClicked",
+          "command": "clineunleashed.popoutButtonClicked",
           "group": "navigation@3",
-          "when": "view == claude-dev.SidebarProvider"
+          "when": "view == claude-dev-unleashed.SidebarProvider"
         },
         {
-          "command": "cline.settingsButtonClicked",
+          "command": "clineunleashed.settingsButtonClicked",
           "group": "navigation@4",
-          "when": "view == claude-dev.SidebarProvider"
+          "when": "view == claude-dev-unleashed.SidebarProvider"
         }
       ]
     }
