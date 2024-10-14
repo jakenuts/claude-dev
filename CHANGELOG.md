@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.0.7]
+
+- Misc. bug fixes
+
+## [2.0.6]
+
+- Update URLs to https://github.com/cline/cline
+
 ## [2.0.5]
 
 - Fixed bug where Cline's edits would stream into the active tab when switching tabs during a write_to_file
