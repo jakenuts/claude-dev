@@ -3,4 +3,4 @@
 pnpm run compile
 pnpm run build:webview
 pnpm run package
-vsce package
+pnpm vsce pack --no-dependencies 
