@@ -1,6 +1,6 @@
-#npm install -g @vscode/vsce
+#pnpm install -g @vscode/vsce
 
-npm run compile
-npm run build:webview
-npm run package
+pnpm run compile
+pnpm run build:webview
+pnpm run package
 vsce package
