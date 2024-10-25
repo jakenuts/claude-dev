@@ -5,7 +5,7 @@ rimraf ..\webview-ui\node_modules\
 rimraf ..\webview-ui\dist
 rimraf ..\webview-ui\package-lock.json
 
-pnpm run install:all
+npm run install:all
 
 .\tool-build-package.ps1
 
