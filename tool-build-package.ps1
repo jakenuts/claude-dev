@@ -3,4 +3,4 @@ rm *.vsix
 npm run compile
 npm run build:webview
 npm run package
-npx vsce pack #--no-dependencies 
+npx vsce package #--no-dependencies 
