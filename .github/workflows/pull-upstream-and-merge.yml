@@ -1,0 +1,76 @@
+name: Pull Upstream and Merge
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight
+  workflow_dispatch:
+
+jobs:
+  pull-and-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Pull upstream changes
+        run: |
+          git remote add upstream https://github.com/jakenuts/claude-dev.git
+          git fetch upstream
+          git checkout main
+          git merge upstream/main
+
+      - name: Merge updates from main
+        run: |
+          git checkout -b update-branch
+          git merge main
+
+      - name: Build validation
+        run: npm run compile
+
+      - name: Commit changes
+        run: |
+          git checkout main
+          git merge update-branch
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify maintainers on failure
+        if: failure()
+        run: echo "Merge conflict or failure occurred. Please resolve manually."
+
+  build-and-release:
+    needs: pull-and-merge
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run compile
+
+      - name: Package project
+        run: npm run package
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            *.vsix
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
