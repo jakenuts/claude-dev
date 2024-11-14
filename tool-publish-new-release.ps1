@@ -10,4 +10,4 @@ git tag v$Release
 git push origin v$Release 
 
 gh release create v$Release --generate-notes
-gh release upload v$Release claude-dev-$Release.vsix
+gh release upload v$Release claude-dev-unleashed-$Release.vsix
