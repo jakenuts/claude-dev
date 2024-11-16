@@ -40,34 +40,40 @@ export class AnthropicHandler implements ApiHandler {
 				)
 				const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
 				const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
+
+				const outgoingMessages:Array<any> =  messages.map((message, index) => {
+					if (index === lastUserMsgIndex || index === secondLastMsgUserIndex) {
+						return {
+							...message,
+							content:
+								typeof message.content === "string"
+									? [
+											{
+												type: "text",
+												text: message.content,
+												cache_control: { type: "ephemeral" },
+											},
+									  ]
+									: message.content.map((content, contentIndex) =>
+											contentIndex === message.content.length - 1
+												? { ...content, cache_control: { type: "ephemeral" } }
+												: content
+									  ),
+						}
+					}
+					return message
+				});
+
+				const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+				console.log(`[${currentTime}] 🤖 Sending ${outgoingMessages.length} messages to the prompt caching API`);
+
 				stream = await this.client.beta.promptCaching.messages.create(
 					{
 						model: modelId,
 						max_tokens: this.getModel().info.maxTokens || 8192,
 						temperature: 0,
 						system: [{ text: systemPrompt, type: "text", cache_control: { type: "ephemeral" } }], // setting cache breakpoint for system prompt so new tasks can reuse it
-						messages: messages.map((message, index) => {
-							if (index === lastUserMsgIndex || index === secondLastMsgUserIndex) {
-								return {
-									...message,
-									content:
-										typeof message.content === "string"
-											? [
-													{
-														type: "text",
-														text: message.content,
-														cache_control: { type: "ephemeral" },
-													},
-											  ]
-											: message.content.map((content, contentIndex) =>
-													contentIndex === message.content.length - 1
-														? { ...content, cache_control: { type: "ephemeral" } }
-														: content
-											  ),
-								}
-							}
-							return message
-						}),
+						messages: outgoingMessages,
 						// tools, // cache breakpoints go from tools > system > messages, and since tools dont change, we can just set the breakpoint at the end of system (this avoids having to set a breakpoint at the end of tools which by itself does not meet min requirements for haiku caching)
 						// tool_choice: { type: "auto" },
 						// tools: tools,
@@ -93,6 +99,8 @@ export class AnthropicHandler implements ApiHandler {
 				break
 			}
 			default: {
+				console.log(`🤖 Sending ${messages.length} to the API`, messages)
+
 				stream = (await this.client.messages.create({
 					model: modelId,
 					max_tokens: this.getModel().info.maxTokens || 8192,

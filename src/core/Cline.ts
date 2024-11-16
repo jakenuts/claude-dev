@@ -776,12 +776,26 @@ export class Cline {
 
 		const stream = this.api.createMessage(systemPrompt, this.apiConversationHistory)
 		const iterator = stream[Symbol.asyncIterator]()
+		let rateLimitsErrors = 0;
+		let rateLimitDelay = 30;
 
 		try {
 			// awaiting first chunk to see if it will throw an error
 			const firstChunk = await iterator.next()
 			yield firstChunk.value
 		} catch (error) {
+
+			if (error.status === 429 && rateLimitsErrors <= 3) {
+				
+				const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+				console.log(`[${currentTime}] 🤖 Rate limited, waiting ${rateLimitDelay} seconds to retry`, error);
+				await delay(rateLimitDelay * 1000);
+				rateLimitsErrors++;
+				rateLimitDelay *= 2;
+				yield* this.attemptApiRequest(previousApiReqIndex)
+				return
+			}
+
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			const { response } = await this.ask(
 				"api_req_failed",
