@@ -6,6 +6,7 @@ import { ClineProvider } from "./core/webview/ClineProvider"
 import { createClineAPI } from "./exports"
 import "./utils/path" // necessary to have access to String.prototype.toPosix
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
+import { LoggerService } from "./services/logging/LoggerService"
 
 /*
 Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -21,12 +22,16 @@ let outputChannel: vscode.OutputChannel
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	const logger = LoggerService.getInstance()
+	context.subscriptions.push(logger.getOutputChannel())
+	logger.log("Cline extension activated", "Extension")
+
 	outputChannel = vscode.window.createOutputChannel("Cline")
 	context.subscriptions.push(outputChannel)
 
 	outputChannel.appendLine("Cline extension activated")
 
-	const sidebarProvider = new ClineProvider(context, outputChannel)
+	const sidebarProvider = new ClineProvider(context, logger.getOutputChannel())
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, sidebarProvider, {
@@ -135,5 +140,5 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() {
-	outputChannel.appendLine("Cline extension deactivated")
+	LoggerService.getInstance().log("Cline extension deactivated", "Extension")
 }

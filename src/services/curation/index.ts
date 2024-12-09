@@ -1,3 +1,5 @@
+import { LoggerService } from '../logging/LoggerService';
+
 interface CurationConfig {
     maxRows?: number;
     maxTotalChars?: number;
@@ -6,6 +8,7 @@ interface CurationConfig {
 }
 
 export class Curation {
+    private static readonly logger = LoggerService.getInstance();
     // Default configurations for different content types
     private static readonly DEFAULTS = {
         CONSOLE_LOGS: {
@@ -42,14 +45,11 @@ export class Curation {
             truncationMessage = Curation.DEFAULTS.CONSOLE_LOGS.truncationMessage
         } = config;
 
-
-
         // If within limits, return original array
         if (items.length <= maxRows) {
             const totalChars = items.reduce((sum, item) => sum + item.length, 0);
             if (totalChars <= maxTotalChars) {
-
-                console.log(`[Curation] Content approved ${items.length} lines of ${totalChars} chars.`);
+                this.logger.logOperation('Curation', 'Content approved', `${items.length} lines of ${totalChars} chars`);
                 return items;
             }
         }
@@ -61,7 +61,7 @@ export class Curation {
                 const firstPart = items.slice(0, keepEdges);
                 const lastPart = items.slice(-keepEdges);
 
-                console.log(`[Curation] Content truncated, ${removedCount} of ${items.length} lines removed.`);
+                this.logger.logOperation('Curation', 'Content truncated', `${removedCount} of ${items.length} lines removed`);
 
                 return [
                     ...firstPart,
@@ -81,7 +81,7 @@ export class Curation {
             if (currentSize >= maxTotalChars) {
                 const removedCount = endIndex - startIndex + 1;
 
-                console.log(`[Curation] Content truncated, ${removedCount} of ${currentSize} chars removed.`);
+                this.logger.logOperation('Curation', 'Content truncated', `${removedCount} of ${currentSize} chars removed`);
 
                 if (removedCount > 0) {
                     truncatedItems.splice(
