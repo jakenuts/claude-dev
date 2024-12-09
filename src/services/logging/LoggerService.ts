@@ -33,7 +33,9 @@ export class LoggerService {
 	 * @param source Optional source identifier (e.g. service name)
 	 */
 	public log(message: string, source?: string) {
-		if (this.disposed) return;
+		if (this.disposed) {
+			return;
+		}
 		const timestamp = new Date().toISOString()
 		const prefix = source ? `[${source}]` : ""
 		this.outputChannel.appendLine(`${timestamp} ${prefix} ${message}`)
