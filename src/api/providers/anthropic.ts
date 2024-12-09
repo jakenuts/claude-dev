@@ -36,7 +36,7 @@ export class AnthropicHandler implements ApiHandler {
 				*/
 				const userMsgIndices = messages.reduce(
 					(acc, msg, index) => (msg.role === "user" ? [...acc, index] : acc),
-					[] as number[]
+					[] as number[],
 				)
 				const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
 				const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
@@ -94,7 +94,7 @@ export class AnthropicHandler implements ApiHandler {
 							default:
 								return undefined
 						}
-					})()
+					})(),
 				)
 				break
 			}
