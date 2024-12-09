@@ -8,6 +8,7 @@ import pWaitFor from "p-wait-for"
 import delay from "delay"
 import { fileExistsAtPath } from "../../utils/fs"
 import { BrowserActionResult } from "../../shared/ExtensionMessage"
+import { Curation } from "../curation"
 
 interface PCRStats {
 	puppeteer: { launch: typeof launch }
@@ -19,80 +20,9 @@ export class BrowserSession {
 	private browser?: Browser
 	private page?: Page
 	private currentMousePosition?: string
-	private readonly MAX_LOG_ROWS = 50
-	private readonly MAX_TOTAL_CHARS = 10000
-	private readonly KEEP_EDGES = 10 // Number of entries to keep at start and end when truncating
 
 	constructor(context: vscode.ExtensionContext) {
 		this.context = context
-	}
-
-	private truncateLogs(logs: string[]): string[] {
-		// If within limits, return original array
-		if (logs.length <= this.MAX_LOG_ROWS) {
-			const totalChars = logs.reduce((sum, log) => sum + log.length, 0)
-			if (totalChars <= this.MAX_TOTAL_CHARS) {
-				return logs
-			}
-		}
-
-		// If we need to truncate
-		if (logs.length > this.MAX_LOG_ROWS) {
-			const removedCount = logs.length - (2 * this.KEEP_EDGES)
-			if (removedCount > 0) {
-				const firstPart = logs.slice(0, this.KEEP_EDGES)
-				const lastPart = logs.slice(-this.KEEP_EDGES)
-				return [
-					...firstPart,
-					`-- PARTIAL RESULT : ${removedCount} ROWS REMOVED HERE TO LIMIT SIZE --`,
-					...lastPart
-				]
-			}
-		}
-
-		// If we're here, we need to truncate due to character count
-		let currentSize = 0
-		let startIndex = 0
-		let endIndex = logs.length - 1
-		const truncatedLogs: string[] = []
-		
-		// Keep adding from start and end until we hit the character limit
-		while (startIndex <= endIndex) {
-			if (currentSize >= this.MAX_TOTAL_CHARS) {
-				const removedCount = endIndex - startIndex + 1
-				if (removedCount > 0) {
-					truncatedLogs.splice(
-						truncatedLogs.length / 2, 
-						0, 
-						`-- PARTIAL RESULT : ${removedCount} ROWS REMOVED HERE TO LIMIT SIZE --`
-					)
-				}
-				break
-			}
-
-			if (startIndex === endIndex) {
-				const log = logs[startIndex]
-				if (currentSize + log.length <= this.MAX_TOTAL_CHARS) {
-					truncatedLogs.push(log)
-				}
-				break
-			}
-
-			const startLog = logs[startIndex]
-			const endLog = logs[endIndex]
-			
-			if (currentSize + startLog.length + endLog.length <= this.MAX_TOTAL_CHARS) {
-				truncatedLogs.push(startLog)
-				truncatedLogs.push(endLog)
-				currentSize += startLog.length + endLog.length
-				startIndex++
-				endIndex--
-			} else {
-				break
-			}
-		}
-
-		return truncatedLogs
 	}
 
 	private async ensureChromiumExists(): Promise<PCRStats> {
@@ -226,8 +156,8 @@ export class BrowserSession {
 		this.page.off("console", consoleListener)
 		this.page.off("pageerror", errorListener)
 
-		// Truncate logs if needed before joining
-		const truncatedLogs = this.truncateLogs(logs)
+		// Use Curation service to truncate logs if needed
+		const truncatedLogs = Curation.forConsoleLogs(logs)
 
 		return {
 			screenshot,
