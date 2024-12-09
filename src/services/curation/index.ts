@@ -42,10 +42,14 @@ export class Curation {
             truncationMessage = Curation.DEFAULTS.CONSOLE_LOGS.truncationMessage
         } = config;
 
+
+
         // If within limits, return original array
         if (items.length <= maxRows) {
             const totalChars = items.reduce((sum, item) => sum + item.length, 0);
             if (totalChars <= maxTotalChars) {
+
+                console.log(`[Curation] Content approved ${items.length} lines of ${totalChars} chars.`);
                 return items;
             }
         }
@@ -56,6 +60,9 @@ export class Curation {
             if (removedCount > 0) {
                 const firstPart = items.slice(0, keepEdges);
                 const lastPart = items.slice(-keepEdges);
+
+                console.log(`[Curation] Content truncated, ${removedCount} of ${items.length} lines removed.`);
+
                 return [
                     ...firstPart,
                     truncationMessage.replace("{count}", removedCount.toString()),
@@ -73,6 +80,9 @@ export class Curation {
         while (startIndex <= endIndex) {
             if (currentSize >= maxTotalChars) {
                 const removedCount = endIndex - startIndex + 1;
+
+                console.log(`[Curation] Content truncated, ${removedCount} of ${currentSize} chars removed.`);
+
                 if (removedCount > 0) {
                     truncatedItems.splice(
                         truncatedItems.length / 2,
