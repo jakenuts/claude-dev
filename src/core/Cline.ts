@@ -47,6 +47,7 @@ import { truncateHalfConversation } from "./sliding-window"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
 import { showOmissionWarning } from "../integrations/editor/detect-omission"
 import { BrowserSession } from "../services/browser/BrowserSession"
+import { Curation } from "../services/curation"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -2147,7 +2148,8 @@ export class Cline {
 				terminalDetails += `\n## Original command: \`${busyTerminal.lastCommand}\``
 				const newOutput = this.terminalManager.getUnretrievedOutput(busyTerminal.id)
 				if (newOutput) {
-					terminalDetails += `\n### New Output\n${newOutput}`
+					const curatedOutput = Curation.forTerminalOutput(newOutput);
+					terminalDetails += `\n### New Output\n${curatedOutput}`
 				} else {
 					// details += `\n(Still running, no new output)` // don't want to show this right after running the command
 				}
@@ -2159,7 +2161,8 @@ export class Cline {
 			for (const inactiveTerminal of inactiveTerminals) {
 				const newOutput = this.terminalManager.getUnretrievedOutput(inactiveTerminal.id)
 				if (newOutput) {
-					inactiveTerminalOutputs.set(inactiveTerminal.id, newOutput)
+					const curatedOutput = Curation.forTerminalOutput(newOutput);
+					inactiveTerminalOutputs.set(inactiveTerminal.id, curatedOutput)
 				}
 			}
 			if (inactiveTerminalOutputs.size > 0) {

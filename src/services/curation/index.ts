@@ -12,13 +12,13 @@ export class Curation {
     // Default configurations for different content types
     private static readonly DEFAULTS = {
         CONSOLE_LOGS: {
-            maxRows: 50,
+            maxRows: 30,
             maxTotalChars: 10000,
             keepEdges: 10,
             truncationMessage: "-- PARTIAL RESULT : {count} ROWS REMOVED HERE TO LIMIT SIZE --"
         },
         FILE_CONTENT: {
-            maxRows: 1000,
+            maxRows: 3000,
             maxTotalChars: 50000,
             keepEdges: 50,
             truncationMessage: "... {count} LINES TRUNCATED ..."
@@ -44,6 +44,8 @@ export class Curation {
             keepEdges = Curation.DEFAULTS.CONSOLE_LOGS.keepEdges,
             truncationMessage = Curation.DEFAULTS.CONSOLE_LOGS.truncationMessage
         } = config;
+
+        this.logger.logOperation('Curation', 'Content provided', `${items.length}`);
 
         // If within limits, return original array
         if (items.length <= maxRows) {
@@ -143,5 +145,9 @@ export class Curation {
 
     static get forWebContent() {
         return (items: string[]) => this.truncateArray(items, this.DEFAULTS.WEB_CONTENT);
+    }
+
+    static get forTerminalOutput() {
+        return (content: string) => this.truncateString(content, this.DEFAULTS.CONSOLE_LOGS);
     }
 }

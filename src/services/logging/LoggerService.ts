@@ -18,6 +18,8 @@ export class LoggerService {
 
 	private constructor() {
 		this.outputChannel = vscode.window.createOutputChannel("Cline")
+
+		this.log("Output channel 'Cline' created", "LoggerService");
 	}
 
 	public static getInstance(): LoggerService {
