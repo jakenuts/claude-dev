@@ -1,186 +1,200 @@
 {
-  "name": "claude-dev-unleashed",
-  "displayName": "Cline Unleashed⛓️‍💥 (prev. Claude Dev)",
-  "description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
-  "version": "2.1.6-ratelimit",
-  "icon": "assets/icons/icon.png",
-  "galleryBanner": {
-    "color": "#617A91",
-    "theme": "dark"
-  },
-  "engines": {
-    "vscode": "^1.84.0"
-  },
-  "author": {
-    "name": "Cline Bot Inc."
-  },
-  "license": "Apache-2.0",
-  "publisher": "jakenuts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/jakenuts/claude-dev"
-  },
-  "homepage": "https://cline.bot",
-  "categories": [
-    "AI",
-    "Chat",
-    "Programming Languages",
-    "Education",
-    "Snippets",
-    "Testing"
-  ],
-  "keywords": [
-    "cline",
-    "claude",
-    "dev",
-    "openrouter",
-    "coding",
-    "agent",
-    "autonomous",
-    "chatgpt",
-    "sonnet",
-    "ai",
-    "llama"
-  ],
-  "activationEvents": [],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "claude-dev-unleashed-ActivityBar",
-          "title": "Cline Unleashed⛓️‍💥",
-          "icon": "$(robot)"
-        }
-      ]
-    },
-    "views": {
-      "claude-dev-unleashed-ActivityBar": [
-        {
-          "type": "webview",
-          "id": "claude-dev-unleashed.SidebarProvider",
-          "name": ""
-        }
-      ]
-    },
-    "commands": [
-      {
-        "command": "clineunleashed.plusButtonClicked",
-        "title": "New Task",
-        "icon": "$(add)"
-      },
-      {
-        "command": "clineunleashed.historyButtonClicked",
-        "title": "History",
-        "icon": "$(history)"
-      },
-      {
-        "command": "clineunleashed.popoutButtonClicked",
-        "title": "Open in Editor",
-        "icon": "$(link-external)"
-      },
-      {
-        "command": "clineunleashed.settingsButtonClicked",
-        "title": "Settings",
-        "icon": "$(settings-gear)"
-      },
-      {
-        "command": "clineunleashed.openInNewTab",
-        "title": "Open In New Tab",
-        "category": "Cline"
-      }
-    ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "clineunleashed.plusButtonClicked",
-          "group": "navigation@1",
-          "when": "view == claude-dev-unleashed.SidebarProvider"
-        },
-        {
-          "command": "clineunleashed.historyButtonClicked",
-          "group": "navigation@2",
-          "when": "view == claude-dev-unleashed.SidebarProvider"
-        },
-        {
-          "command": "clineunleashed.popoutButtonClicked",
-          "group": "navigation@3",
-          "when": "view == claude-dev-unleashed.SidebarProvider"
-        },
-        {
-          "command": "clineunleashed.settingsButtonClicked",
-          "group": "navigation@4",
-          "when": "view == claude-dev-unleashed.SidebarProvider"
-        }
-      ]
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
-    "watch": "npm-run-all -p watch:*",
-    "watch:esbuild": "node esbuild.js --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "npm run build:webview && npm run check-types && npm run lint && node esbuild.js --production",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "check-types": "tsc --noEmit",
-    "lint": "eslint src --ext ts",
-    "test": "vscode-test",
-    "install:all": "npm install && cd webview-ui && npm install",
-    "start:webview": "cd webview-ui && npm run start",
-    "build:webview": "cd webview-ui && npm run build",
-    "test:webview": "cd webview-ui && npm run test",
-    "publish:marketplace": "vsce publish && ovsx publish",
-    "vscode:build-and-install": "npm run compile && npm run package && vsce publish",
-    "vscode:build-and-package": "npm run build:webview && npm run compile && npm run package && vsce package",
-    "github:tag-and-release": "pwsh tool-publish-new-release.ps1"
-  },
-  "devDependencies": {
-    "@types/diff": "^5.2.1",
-    "@types/mocha": "^10.0.7",
-    "@types/node": "20.x",
-    "@types/vscode": "^1.84.0",
-    "@typescript-eslint/eslint-plugin": "^7.14.1",
-    "@typescript-eslint/parser": "^7.11.0",
-    "@vscode/test-cli": "^0.0.9",
-    "@vscode/test-electron": "^2.4.0",
-    "esbuild": "^0.21.5",
-    "eslint": "^8.57.0",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.4.5"
-  },
-  "dependencies": {
-    "@anthropic-ai/bedrock-sdk": "^0.11.2",
-    "@anthropic-ai/sdk": "^0.32.1",
-    "@anthropic-ai/vertex-sdk": "^0.5.2",
-    "@google/generative-ai": "^0.18.0",
-    "@types/clone-deep": "^4.0.4",
-    "@types/pdf-parse": "^1.1.4",
-    "@types/turndown": "^5.0.5",
-    "@vscode/codicons": "^0.0.36",
-    "axios": "^1.7.4",
-    "cheerio": "^1.0.0",
-    "clone-deep": "^4.0.1",
-    "default-shell": "^2.2.0",
-    "delay": "^6.0.0",
-    "diff": "^5.2.0",
-    "fast-deep-equal": "^3.1.3",
-    "globby": "^14.0.2",
-    "isbinaryfile": "^5.0.2",
-    "mammoth": "^1.8.0",
-    "monaco-vscode-textmate-theme-converter": "^0.1.7",
-    "openai": "^4.61.0",
-    "os-name": "^6.0.0",
-    "p-wait-for": "^5.0.2",
-    "pdf-parse": "^1.1.1",
-    "puppeteer-chromium-resolver": "^23.0.0",
-    "puppeteer-core": "^23.4.0",
-    "serialize-error": "^11.0.3",
-    "strip-ansi": "^7.1.0",
-    "tree-sitter-wasms": "^0.1.11",
-    "turndown": "^7.2.0",
-    "web-tree-sitter": "^0.22.6"
-  }
+	"name": "claude-dev-unleashed",
+	"displayName": "Cline Unleashed⛓️‍💥 (prev. Claude Dev)",
+	"description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
+	"version": "2.2.2",
+	"icon": "assets/icons/icon.png",
+	"galleryBanner": {
+		"color": "#617A91",
+		"theme": "dark"
+	},
+	"engines": {
+		"vscode": "^1.84.0"
+	},
+	"author": {
+		"name": "Cline Bot Inc."
+	},
+	"license": "Apache-2.0",
+	"publisher": "jakenuts",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/jakenuts/claude-dev"
+	},
+	"homepage": "https://cline.bot",
+	"categories": [
+		"AI",
+		"Chat",
+		"Programming Languages",
+		"Education",
+		"Snippets",
+		"Testing"
+	],
+	"keywords": [
+		"cline",
+		"claude",
+		"dev",
+		"mcp",
+		"openrouter",
+		"coding",
+		"agent",
+		"autonomous",
+		"chatgpt",
+		"sonnet",
+		"ai",
+		"llama"
+	],
+	"activationEvents": [],
+	"main": "./dist/extension.js",
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "claude-dev-unleashed-ActivityBar",
+					"title": "Cline Unleashed⛓️‍💥",
+					"icon": "$(robot)"
+				}
+			]
+		},
+		"views": {
+			"claude-dev-unleashed-ActivityBar": [
+				{
+					"type": "webview",
+					"id": "claude-dev-unleashed.SidebarProvider",
+					"name": ""
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "clineunleashed.plusButtonClicked",
+				"title": "New Task",
+				"icon": "$(add)"
+			},
+			{
+				"command": "clineunleashed.mcpButtonClicked",
+				"title": "MCP Servers",
+				"icon": "$(server)"
+			},
+			{
+				"command": "clineunleashed.historyButtonClicked",
+				"title": "History",
+				"icon": "$(history)"
+			},
+			{
+				"command": "clineunleashed.popoutButtonClicked",
+				"title": "Open in Editor",
+				"icon": "$(link-external)"
+			},
+			{
+				"command": "clineunleashed.settingsButtonClicked",
+				"title": "Settings",
+				"icon": "$(settings-gear)"
+			},
+			{
+				"command": "clineunleashed.openInNewTab",
+				"title": "Open In New Tab",
+				"category": "Cline"
+			}
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "clineunleashed.plusButtonClicked",
+					"group": "navigation@1",
+					"when": "view == claude-dev-unleashed.SidebarProvider"
+				},
+				{
+					"command": "clineunleashed.mcpButtonClicked", 
+					"group": "navigation@2",
+					"when": "view == claude-dev-unleashed.SidebarProvider"
+				},
+				{
+					"command": "clineunleashed.historyButtonClicked",
+					"group": "navigation@3",
+					"when": "view == claude-dev-unleashed.SidebarProvider"
+				},
+				{
+					"command": "clineunleashed.popoutButtonClicked",
+					"group": "navigation@4",
+					"when": "view == claude-dev-unleashed.SidebarProvider"
+				},
+				{
+					"command": "clineunleashed.settingsButtonClicked",
+					"group": "navigation@5",
+					"when": "view == claude-dev-unleashed.SidebarProvider"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run package",
+		"compile": "npm run check-types && npm run lint && node esbuild.js",
+		"watch": "npm-run-all -p watch:*",
+		"watch:esbuild": "node esbuild.js --watch",
+		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+		"package": "npm run build:webview && npm run check-types && npm run lint && node esbuild.js --production",
+		"compile-tests": "tsc -p . --outDir out",
+		"watch-tests": "tsc -p . -w --outDir out",
+		"pretest": "npm run compile-tests && npm run compile && npm run lint",
+		"check-types": "tsc --noEmit",
+		"lint": "eslint src --ext ts",
+		"format": "prettier . --check",
+		"format:fix": "prettier . --write",
+		"test": "vscode-test",
+		"install:all": "npm install && cd webview-ui && npm install",
+		"start:webview": "cd webview-ui && npm run start",
+		"build:webview": "cd webview-ui && npm run build",
+		"test:webview": "cd webview-ui && npm run test",
+		"publish:marketplace": "vsce publish && ovsx publish"
+	},
+	"devDependencies": {
+		"@types/diff": "^5.2.1",
+		"@types/mocha": "^10.0.7",
+		"@types/node": "20.x",
+		"@types/vscode": "^1.84.0",
+		"@typescript-eslint/eslint-plugin": "^7.14.1",
+		"@typescript-eslint/parser": "^7.11.0",
+		"@vscode/test-cli": "^0.0.9",
+		"@vscode/test-electron": "^2.4.0",
+		"esbuild": "^0.21.5",
+		"eslint": "^8.57.0",
+		"npm-run-all": "^4.1.5",
+		"prettier": "^3.3.3",
+		"typescript": "^5.4.5"
+	},
+	"dependencies": {
+		"@anthropic-ai/bedrock-sdk": "^0.10.2",
+		"@anthropic-ai/sdk": "^0.26.0",
+		"@anthropic-ai/vertex-sdk": "^0.4.1",
+		"@google/generative-ai": "^0.18.0",
+		"@modelcontextprotocol/sdk": "^1.0.1",
+		"@types/clone-deep": "^4.0.4",
+		"@types/pdf-parse": "^1.1.4",
+		"@types/turndown": "^5.0.5",
+		"@vscode/codicons": "^0.0.36",
+		"axios": "^1.7.4",
+		"cheerio": "^1.0.0",
+		"chokidar": "^4.0.1",
+		"clone-deep": "^4.0.1",
+		"default-shell": "^2.2.0",
+		"delay": "^6.0.0",
+		"diff": "^5.2.0",
+		"fast-deep-equal": "^3.1.3",
+		"globby": "^14.0.2",
+		"isbinaryfile": "^5.0.2",
+		"mammoth": "^1.8.0",
+		"monaco-vscode-textmate-theme-converter": "^0.1.7",
+		"openai": "^4.61.0",
+		"os-name": "^6.0.0",
+		"p-wait-for": "^5.0.2",
+		"pdf-parse": "^1.1.1",
+		"puppeteer-chromium-resolver": "^23.0.0",
+		"puppeteer-core": "^23.4.0",
+		"serialize-error": "^11.0.3",
+		"strip-ansi": "^7.1.0",
+		"tree-sitter-wasms": "^0.1.11",
+		"turndown": "^7.2.0",
+		"web-tree-sitter": "^0.22.6",
+		"zod": "^3.23.8"
+	}
 }
