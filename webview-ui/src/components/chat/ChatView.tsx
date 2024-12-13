@@ -538,10 +538,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		() =>
 			debounce(
 				() => {
-				virtuosoRef.current?.scrollTo({
-					top: Number.MAX_SAFE_INTEGER,
-					behavior: "smooth",
-				})
+					virtuosoRef.current?.scrollTo({
+						top: Number.MAX_SAFE_INTEGER,
+						behavior: "smooth",
+					})
 				},
 				10,
 				{ immediate: true },

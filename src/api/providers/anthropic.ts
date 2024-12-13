@@ -41,7 +41,7 @@ export class AnthropicHandler implements ApiHandler {
 				const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
 				const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
 
-				const outgoingMessages:Array<any> =  messages.map((message, index) => {
+				const outgoingMessages: Array<any> = messages.map((message, index) => {
 					if (index === lastUserMsgIndex || index === secondLastMsgUserIndex) {
 						return {
 							...message,
@@ -53,19 +53,23 @@ export class AnthropicHandler implements ApiHandler {
 												text: message.content,
 												cache_control: { type: "ephemeral" },
 											},
-									  ]
+										]
 									: message.content.map((content, contentIndex) =>
 											contentIndex === message.content.length - 1
 												? { ...content, cache_control: { type: "ephemeral" } }
-												: content
-									  ),
+												: content,
+										),
 						}
 					}
 					return message
-				});
+				})
 
-				const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-				console.log(`[${currentTime}] 🤖 Sending ${outgoingMessages.length} messages to the prompt caching API`);
+				const currentTime = new Date().toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
+					second: "2-digit",
+				})
+				console.log(`[${currentTime}] 🤖 Sending ${outgoingMessages.length} messages to the prompt caching API`)
 
 				stream = await this.client.beta.promptCaching.messages.create(
 					{

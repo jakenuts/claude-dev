@@ -1,36 +1,36 @@
 name: Build and Release
 
 on:
-  push:
-    branches:
-      - main
+    push:
+        branches:
+            - main
 
 jobs:
-  build-and-release:
-    runs-on: ubuntu-latest
+    build-and-release:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+            - name: Set up Node.js
+              uses: actions/setup-node@v2
+              with:
+                  node-version: "14"
 
-      - name: Install dependencies
-        run: npm install
+            - name: Install dependencies
+              run: npm install
 
-      - name: Build project
-        run: npm run compile
+            - name: Build project
+              run: npm run compile
 
-      - name: Package project
-        run: npm run package
+            - name: Package project
+              run: npm run package
 
-      - name: Create release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            *.vsix
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Create release
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: |
+                      *.vsix
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

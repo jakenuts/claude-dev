@@ -4,6 +4,7 @@ import pdf from "pdf-parse/lib/pdf-parse"
 import mammoth from "mammoth"
 import fs from "fs/promises"
 import { isBinaryFile } from "isbinaryfile"
+import { Curation } from "../../services/curation"
 
 export async function extractTextFromFile(filePath: string): Promise<string> {
 	try {
@@ -12,21 +13,29 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 		throw new Error(`File not found: ${filePath}`)
 	}
 	const fileExtension = path.extname(filePath).toLowerCase()
+	let extractedText: string;
+	
 	switch (fileExtension) {
 		case ".pdf":
-			return extractTextFromPDF(filePath)
+			extractedText = await extractTextFromPDF(filePath)
+			break
 		case ".docx":
-			return extractTextFromDOCX(filePath)
+			extractedText = await extractTextFromDOCX(filePath)
+			break
 		case ".ipynb":
-			return extractTextFromIPYNB(filePath)
+			extractedText = await extractTextFromIPYNB(filePath)
+			break
 		default:
 			const isBinary = await isBinaryFile(filePath).catch(() => false)
 			if (!isBinary) {
-				return await fs.readFile(filePath, "utf8")
+				extractedText = await fs.readFile(filePath, "utf8")
 			} else {
 				throw new Error(`Cannot read text for file type: ${fileExtension}`)
 			}
 	}
+
+	// Apply content curation before returning
+	return Curation.forFileContent(extractedText)
 }
 
 async function extractTextFromPDF(filePath: string): Promise<string> {
