@@ -20,7 +20,7 @@ jobs:
 
             - name: Pull upstream changes
               run: |
-                  git remote add upstream https://github.com/jakenuts/claude-dev.git
+                  git remote add upstream https://github.com/jakenuts/cline-unleashed.git
                   git fetch upstream
                   git checkout main
                   git merge upstream/main

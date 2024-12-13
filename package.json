@@ -1,5 +1,5 @@
 {
-	"name": "claude-dev-unleashed",
+	"name": "cline-unleashed",
 	"displayName": "Cline Unleashed⛓️‍💥 (prev. Claude Dev)",
 	"description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
 	"version": "2.2.2",
@@ -49,49 +49,49 @@
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "claude-dev-unleashed-ActivityBar",
+					"id": "cline-unleashed-ActivityBar",
 					"title": "Cline Unleashed⛓️‍💥",
 					"icon": "$(robot)"
 				}
 			]
 		},
 		"views": {
-			"claude-dev-unleashed-ActivityBar": [
+			"cline-unleashed-ActivityBar": [
 				{
 					"type": "webview",
-					"id": "claude-dev-unleashed.SidebarProvider",
+					"id": "cline-unleashed.SidebarProvider",
 					"name": ""
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "clineunleashed.plusButtonClicked",
+				"command": "cline-unleashed.plusButtonClicked",
 				"title": "New Task",
 				"icon": "$(add)"
 			},
 			{
-				"command": "clineunleashed.mcpButtonClicked",
+				"command": "cline-unleashed.mcpButtonClicked",
 				"title": "MCP Servers",
 				"icon": "$(server)"
 			},
 			{
-				"command": "clineunleashed.historyButtonClicked",
+				"command": "cline-unleashed.historyButtonClicked",
 				"title": "History",
 				"icon": "$(history)"
 			},
 			{
-				"command": "clineunleashed.popoutButtonClicked",
+				"command": "cline-unleashed.popoutButtonClicked",
 				"title": "Open in Editor",
 				"icon": "$(link-external)"
 			},
 			{
-				"command": "clineunleashed.settingsButtonClicked",
+				"command": "cline-unleashed.settingsButtonClicked",
 				"title": "Settings",
 				"icon": "$(settings-gear)"
 			},
 			{
-				"command": "clineunleashed.openInNewTab",
+				"command": "cline-unleashed.openInNewTab",
 				"title": "Open In New Tab",
 				"category": "Cline"
 			}
@@ -99,29 +99,29 @@
 		"menus": {
 			"view/title": [
 				{
-					"command": "clineunleashed.plusButtonClicked",
+					"command": "cline-unleashed.plusButtonClicked",
 					"group": "navigation@1",
-					"when": "view == claude-dev-unleashed.SidebarProvider"
+					"when": "view == cline-unleashed.SidebarProvider"
 				},
 				{
-					"command": "clineunleashed.mcpButtonClicked", 
+					"command": "cline-unleashed.mcpButtonClicked", 
 					"group": "navigation@2",
-					"when": "view == claude-dev-unleashed.SidebarProvider"
+					"when": "view == cline-unleashed.SidebarProvider"
 				},
 				{
-					"command": "clineunleashed.historyButtonClicked",
+					"command": "cline-unleashed.historyButtonClicked",
 					"group": "navigation@3",
-					"when": "view == claude-dev-unleashed.SidebarProvider"
+					"when": "view == cline-unleashed.SidebarProvider"
 				},
 				{
-					"command": "clineunleashed.popoutButtonClicked",
+					"command": "cline-unleashed.popoutButtonClicked",
 					"group": "navigation@4",
-					"when": "view == claude-dev-unleashed.SidebarProvider"
+					"when": "view == cline-unleashed.SidebarProvider"
 				},
 				{
-					"command": "clineunleashed.settingsButtonClicked",
+					"command": "cline-unleashed.settingsButtonClicked",
 					"group": "navigation@5",
-					"when": "view == claude-dev-unleashed.SidebarProvider"
+					"when": "view == cline-unleashed.SidebarProvider"
 				}
 			]
 		}
