@@ -6,7 +6,6 @@ import { ClineProvider } from "./core/webview/ClineProvider"
 import { createClineAPI } from "./exports"
 import "./utils/path" // necessary to have access to String.prototype.toPosix
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
-import { LoggerService } from "./services/logging/LoggerService"
 
 /*
 Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -22,16 +21,12 @@ let outputChannel: vscode.OutputChannel
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	const logger = LoggerService.getInstance()
-	context.subscriptions.push(logger.getOutputChannel())
-	logger.log("Cline extension activated", "Extension")
-
 	outputChannel = vscode.window.createOutputChannel("Cline")
 	context.subscriptions.push(outputChannel)
 
 	outputChannel.appendLine("Cline extension activated")
 
-	const sidebarProvider = new ClineProvider(context, logger.getOutputChannel())
+	const sidebarProvider = new ClineProvider(context, outputChannel)
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, sidebarProvider, {
@@ -40,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline-unleashed.plusButtonClicked", async () => {
+		vscode.commands.registerCommand("cline.plusButtonClicked", async () => {
 			outputChannel.appendLine("Plus button Clicked")
 			await sidebarProvider.clearTask()
 			await sidebarProvider.postStateToWebview()
@@ -49,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline-unleashed.mcpButtonClicked", () => {
+		vscode.commands.registerCommand("cline.mcpButtonClicked", () => {
 			sidebarProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		}),
 	)
@@ -87,18 +82,18 @@ export function activate(context: vscode.ExtensionContext) {
 		await vscode.commands.executeCommand("workbench.action.lockEditorGroup")
 	}
 
-	context.subscriptions.push(vscode.commands.registerCommand("cline-unleashed.popoutButtonClicked", openClineInNewTab))
-	context.subscriptions.push(vscode.commands.registerCommand("cline-unleashed.openInNewTab", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("cline.popoutButtonClicked", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("cline.openInNewTab", openClineInNewTab))
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline-unleashed.settingsButtonClicked", () => {
+		vscode.commands.registerCommand("cline.settingsButtonClicked", () => {
 			//vscode.window.showInformationMessage(message)
 			sidebarProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		}),
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline-unleashed.historyButtonClicked", () => {
+		vscode.commands.registerCommand("cline.historyButtonClicked", () => {
 			sidebarProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		}),
 	)
@@ -146,5 +141,5 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() {
-	LoggerService.getInstance().log("Cline extension deactivated", "Extension")
+	outputChannel.appendLine("Cline extension deactivated")
 }

@@ -8,7 +8,6 @@ import pWaitFor from "p-wait-for"
 import delay from "delay"
 import { fileExistsAtPath } from "../../utils/fs"
 import { BrowserActionResult } from "../../shared/ExtensionMessage"
-import { Curation } from "../curation"
 
 interface PCRStats {
 	puppeteer: { launch: typeof launch }
@@ -156,12 +155,9 @@ export class BrowserSession {
 		this.page.off("console", consoleListener)
 		this.page.off("pageerror", errorListener)
 
-		// Use Curation service to truncate logs if needed
-		const truncatedLogs = Curation.forConsoleLogs(logs)
-
 		return {
 			screenshot,
-			logs: truncatedLogs.join("\n"),
+			logs: logs.join("\n"),
 			currentUrl: this.page.url(),
 			currentMousePosition: this.currentMousePosition,
 		}

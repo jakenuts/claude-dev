@@ -48,7 +48,6 @@ import { truncateHalfConversation } from "./sliding-window"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
 import { showOmissionWarning } from "../integrations/editor/detect-omission"
 import { BrowserSession } from "../services/browser/BrowserSession"
-import { Curation } from "../services/curation"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -788,28 +787,12 @@ export class Cline {
 
 		const stream = this.api.createMessage(systemPrompt, this.apiConversationHistory)
 		const iterator = stream[Symbol.asyncIterator]()
-		let rateLimitsErrors = 0
-		let rateLimitDelay = 30
 
 		try {
 			// awaiting first chunk to see if it will throw an error
 			const firstChunk = await iterator.next()
 			yield firstChunk.value
 		} catch (error) {
-			if (error.status === 429 && rateLimitsErrors <= 3) {
-				const currentTime = new Date().toLocaleTimeString([], {
-					hour: "2-digit",
-					minute: "2-digit",
-					second: "2-digit",
-				})
-				console.log(`[${currentTime}] 🤖 Rate limited, waiting ${rateLimitDelay} seconds to retry`, error)
-				await delay(rateLimitDelay * 1000)
-				rateLimitsErrors++
-				rateLimitDelay *= 2
-				yield* this.attemptApiRequest(previousApiReqIndex)
-				return
-			}
-
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			const { response } = await this.ask(
 				"api_req_failed",
@@ -2318,8 +2301,7 @@ export class Cline {
 				terminalDetails += `\n## Original command: \`${busyTerminal.lastCommand}\``
 				const newOutput = this.terminalManager.getUnretrievedOutput(busyTerminal.id)
 				if (newOutput) {
-					const curatedOutput = Curation.forTerminalOutput(newOutput);
-					terminalDetails += `\n### New Output\n${curatedOutput}`
+					terminalDetails += `\n### New Output\n${newOutput}`
 				} else {
 					// details += `\n(Still running, no new output)` // don't want to show this right after running the command
 				}
@@ -2331,8 +2313,7 @@ export class Cline {
 			for (const inactiveTerminal of inactiveTerminals) {
 				const newOutput = this.terminalManager.getUnretrievedOutput(inactiveTerminal.id)
 				if (newOutput) {
-					const curatedOutput = Curation.forTerminalOutput(newOutput);
-					inactiveTerminalOutputs.set(inactiveTerminal.id, curatedOutput)
+					inactiveTerminalOutputs.set(inactiveTerminal.id, newOutput)
 				}
 			}
 			if (inactiveTerminalOutputs.size > 0) {
