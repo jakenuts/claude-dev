@@ -41,6 +41,9 @@ export interface ExtensionState {
 	apiConfiguration?: ApiConfiguration
 	customInstructions?: string
 	alwaysAllowReadOnly?: boolean
+	enableLargeFileCheck?: boolean
+	largeFileCheckMaxSize?: number
+	largeFileCheckChunkSize?: number
 	uriScheme?: string
 	clineMessages: ClineMessage[]
 	taskHistory: HistoryItem[]
@@ -93,6 +96,7 @@ export interface ClineSayTool {
 		| "editedExistingFile"
 		| "newFileCreated"
 		| "readFile"
+		| "readNextChunk"
 		| "listFilesTopLevel"
 		| "listFilesRecursive"
 		| "listCodeDefinitionNames"
@@ -102,6 +106,7 @@ export interface ClineSayTool {
 	content?: string
 	regex?: string
 	filePattern?: string
+	offset?: number
 }
 
 // must keep in sync with system prompt

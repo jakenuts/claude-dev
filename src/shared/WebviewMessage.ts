@@ -5,6 +5,9 @@ export interface WebviewMessage {
 		| "apiConfiguration"
 		| "customInstructions"
 		| "alwaysAllowReadOnly"
+		| "enableLargeFileCheck"
+		| "largeFileCheckMaxSize"
+		| "largeFileCheckChunkSize"
 		| "webviewDidLaunch"
 		| "newTask"
 		| "askResponse"
@@ -26,6 +29,7 @@ export interface WebviewMessage {
 		| "openMcpSettings"
 		| "restartMcpServer"
 	text?: string
+	number?: number
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ApiConfiguration
 	images?: string[]
