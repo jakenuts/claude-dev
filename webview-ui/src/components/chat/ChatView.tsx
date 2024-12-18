@@ -1,4 +1,4 @@
-import { VSCodeButton, VSCodeLink, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import debounce from "debounce"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
@@ -708,15 +708,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		[expandedRows, modifiedMessages, groupedMessages.length, toggleRowExpansion, handleRowHeightChange],
 	)
 
-	useEffect(() => {
-		if (approveAll && enableButtons && primaryButtonText) {
-			const autoApproveTexts = ["Run Command", "Proceed While Running", "Approve", "Save"]
-			if (autoApproveTexts.includes(primaryButtonText)) {
-				handlePrimaryButtonClick()
-			}
-		}
-	}, [approveAll, enableButtons, primaryButtonText, handlePrimaryButtonClick])
-
 	return (
 		<div
 			style={{
@@ -875,12 +866,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 									{isStreaming ? "Cancel" : secondaryButtonText}
 								</VSCodeButton>
 							)}
-							<VSCodeCheckbox
-								style={{ marginLeft: "10px" }}
-								checked={approveAll}
-								onChange={(e) => setApproveAll((e.target as HTMLInputElement).checked)}>
-								Auto-approve
-							</VSCodeCheckbox>
 						</div>
 					)}
 				</>
