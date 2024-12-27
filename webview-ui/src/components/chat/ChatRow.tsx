@@ -276,7 +276,9 @@ export const ChatRowContent = ({
 						<div style={headerStyle}>
 							{toolIcon("edit")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask" ? "Cline wants to edit this file:" : "Cline edited this file:"}
+								{message.type === "ask"
+									? "Cline wants to edit this file:"
+									: "Cline is editing this file:"}
 							</span>
 						</div>
 						<CodeAccordian
@@ -296,7 +298,7 @@ export const ChatRowContent = ({
 							<span style={{ fontWeight: "bold" }}>
 								{message.type === "ask"
 									? "Cline wants to create a new file:"
-									: "Cline created a new file:"}
+									: "Cline is creating a new file:"}
 							</span>
 						</div>
 						<CodeAccordian
@@ -792,6 +794,35 @@ export const ChatRowContent = ({
 								</div>
 							)}
 							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
+						</>
+					)
+				case "diff_error":
+					return (
+						<>
+							<div
+								style={{
+									display: "flex",
+									flexDirection: "column",
+									backgroundColor: "rgba(255, 191, 0, 0.1)",
+									padding: 8,
+									borderRadius: 3,
+									fontSize: 12,
+								}}>
+								<div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+									<i
+										className="codicon codicon-error"
+										style={{
+											marginRight: 8,
+											fontSize: 18,
+											color: "#FFA500",
+										}}></i>
+									<span style={{ fontWeight: 500, color: "#FFA500" }}>Diff Edit Failed</span>
+								</div>
+								<div>
+									This usually happens when the model uses search patterns that don't match anything
+									in the file. Retrying...
+								</div>
+							</div>
 						</>
 					)
 				case "completion_result":
