@@ -49,7 +49,7 @@
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "a-ActivityBar",
+					"id": "cline-unleashed-ActivityBar",
 					"title": "Cline Unleashed⛓️‍💥",
 					"icon": "$(robot)"
 				}
