@@ -8,14 +8,15 @@ import {
 	ApiHandlerOptions,
 	ModelInfo,
 } from "../../shared/api"
-import { ApiHandler } from "../index"
 import { ApiStream } from "../transform/stream"
+import { BaseApiHandler } from "./base-handler"
 
-export class AnthropicHandler implements ApiHandler {
+export class AnthropicHandler extends BaseApiHandler {
 	private options: ApiHandlerOptions
 	private client: Anthropic
 
 	constructor(options: ApiHandlerOptions) {
+		super()
 		this.options = options
 		this.client = new Anthropic({
 			apiKey: this.options.apiKey,
@@ -24,12 +25,10 @@ export class AnthropicHandler implements ApiHandler {
 	}
 
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		let stream: AnthropicStream<Anthropic.Beta.PromptCaching.Messages.RawPromptCachingBetaMessageStreamEvent>
-		const modelId = this.getModel().id
-		let rateLimitsErrors = 0
-		let rateLimitDelay = 30
-
-		try {
+		const self = this
+		yield* this.handleApiRequest(async function* () {
+			let stream: AnthropicStream<Anthropic.Beta.PromptCaching.Messages.RawPromptCachingBetaMessageStreamEvent>
+			const modelId = self.getModel().id
 			switch (modelId) {
 				// 'latest' alias does not support cache_control
 				case "claude-3-5-sonnet-20241022":
@@ -43,10 +42,10 @@ export class AnthropicHandler implements ApiHandler {
 					const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
 					const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
 
-					stream = await this.client.beta.promptCaching.messages.create(
+					stream = await self.client.beta.promptCaching.messages.create(
 						{
 							model: modelId,
-							max_tokens: this.getModel().info.maxTokens || 8192,
+							max_tokens: self.getModel().info.maxTokens || 8192,
 							temperature: 0,
 							system: [{ text: systemPrompt, type: "text", cache_control: { type: "ephemeral" } }], // setting cache breakpoint for system prompt so new tasks can reuse it
 							messages: messages.map((message, index) => {
@@ -96,9 +95,9 @@ export class AnthropicHandler implements ApiHandler {
 					break
 				}
 				default: {
-					stream = (await this.client.messages.create({
+					stream = (await self.client.messages.create({
 						model: modelId,
-						max_tokens: this.getModel().info.maxTokens || 8192,
+						max_tokens: self.getModel().info.maxTokens || 8192,
 						temperature: 0,
 						system: [{ text: systemPrompt, type: "text" }],
 						messages,
@@ -166,19 +165,10 @@ export class AnthropicHandler implements ApiHandler {
 						break
 				}
 			}
-		} catch (error) {
-			if (error.status === 429 && rateLimitsErrors <= 3) {
-				await delay(rateLimitDelay * 1000)
-				rateLimitsErrors++
-				rateLimitDelay *= 2
-				yield* this.createMessage(systemPrompt, messages)
-				return
-			}
-			throw error
-		}
+		})
 	}
 
-	getModel(): { id: AnthropicModelId; info: ModelInfo } {
+	getModel(): { id: string; info: ModelInfo } {
 		const modelId = this.options.apiModelId
 		if (modelId && modelId in anthropicModels) {
 			const id = modelId as AnthropicModelId
