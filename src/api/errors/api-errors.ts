@@ -16,7 +16,7 @@ export class ApiContextSizeError extends Error {
 
 export function isApiRateLimitError(error: any): boolean {
     // Check common rate limit error patterns across different providers
-    if (error instanceof ApiRateLimitError) return true
+    if (error instanceof ApiRateLimitError) {return true;}
     
     const errorMessage = error?.message?.toLowerCase() || ''
     return (
@@ -28,7 +28,7 @@ export function isApiRateLimitError(error: any): boolean {
 
 export function isApiContextSizeError(error: any): boolean {
     // Check common context size error patterns across different providers
-    if (error instanceof ApiContextSizeError) return true
+    if (error instanceof ApiContextSizeError) {return true;}
     
     const errorMessage = error?.message?.toLowerCase() || ''
     return (
